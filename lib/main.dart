@@ -4,7 +4,6 @@ import 'pages/recycle_bin_page.dart';
 import 'pages/secure_folder_page.dart';
 import 'pages/storage_analyzer_page.dart';
 
-
 void main() {
   runApp(const RawFileManagerApp());
 }
@@ -18,40 +17,142 @@ class RawFileManagerApp extends StatelessWidget {
       title: 'Raw File Manager',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        primarySwatch: Colors.teal,
-        appBarTheme: const AppBarTheme(backgroundColor: Colors.teal),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true, // 启用 Material 3
       ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: Colors.black,
-        scaffoldBackgroundColor: Colors.black,
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.grey[900],
-          foregroundColor: Colors.white,
-        ),
-        cardTheme: CardTheme(
-          color: Colors.grey[850],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
-          ),
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        ),
-        textTheme: const TextTheme(
-          titleLarge: TextStyle(
-              color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-          bodyMedium: TextStyle(color: Colors.white, fontSize: 14),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white70),
-      ),
-      themeMode: ThemeMode.dark,
-      home: const HomePage(),
+      home: NavigatorHome(),
       routes: {
         '/recycle_bin': (_) => const RecycleBinPage(),
         '/secure_folder': (_) => const SecureFolderPage(),
         '/storage_analyzer': (_) => const StorageAnalyzerPage(),
       },
     );
+  }
+}
+
+class NavigatorHome extends StatefulWidget {
+  const NavigatorHome({super.key});
+
+  @override
+  State<NavigatorHome> createState() => _NavigatorHomeState();
+}
+
+class _NavigatorHomeState extends State<NavigatorHome> {
+  int _pageIndex = 0;
+  final List<Widget> _pages = [
+    const HomePage(),
+    const RecycleBinPage(),
+    const SecureFolderPage(),
+    const StorageAnalyzerPage(),
+    const SettingsPage()
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      drawer: Drawer(
+          child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: ListView(
+          children: [
+            const DrawerHeader(
+              child: Text("Raw File Manager", style: TextStyle(fontSize: 24)),
+            ),
+            ListTile(
+              tileColor: _pageIndex == 0 ? Theme.of(context).colorScheme.primaryContainer : null,
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(128))),
+              leading: const Icon(Icons.home),
+              title: const Text("Home"),
+              onTap: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  _pageIndex = 0;
+                });
+              },
+            ),
+            ListTile(
+              tileColor: _pageIndex == 1 ? Theme.of(context).colorScheme.primaryContainer : null,
+              //tileColor: ModalRoute.of(context)?.settings.name == '/recycle_bin'?Theme.of(context).colorScheme.primaryContainer:null,
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(128))),
+              leading: const Icon(Icons.delete),
+              title: const Text("Recycle Bin"),
+              onTap: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  _pageIndex = 1;
+                });
+              },
+            ),
+            ListTile(
+              tileColor: _pageIndex == 2 ? Theme.of(context).colorScheme.primaryContainer : null,
+              //tileColor: ModalRoute.of(context)?.settings.name == '/secure_folder'?Theme.of(context).colorScheme.primaryContainer:null,
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(128))),
+              leading: const Icon(Icons.lock),
+              title: const Text("Secure Folder"),
+              onTap: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  _pageIndex = 2;
+                });
+              },
+            ),
+            ListTile(
+              tileColor: _pageIndex == 3 ? Theme.of(context).colorScheme.primaryContainer : null,
+              //tileColor: ModalRoute.of(context)?.settings.name == '/storage_analyzer'?Theme.of(context).colorScheme.primaryContainer:null,
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(128))),
+              leading: const Icon(Icons.pie_chart),
+              title: const Text("Storage Analyzer"),
+              onTap: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  _pageIndex = 3;
+                });
+              },
+            ),
+            ListTile(
+              tileColor: _pageIndex == 4 ? Theme.of(context).colorScheme.primaryContainer : null,
+              //tileColor: ModalRoute.of(context)?.settings.name == '/storage_analyzer'?Theme.of(context).colorScheme.primaryContainer:null,
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(128))),
+              leading: const Icon(Icons.settings),
+              title: const Text("Settings"),
+              onTap: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  _pageIndex = 4;
+                });
+              },
+            ),
+          ],
+        ),
+      )),
+      body: _pages[_pageIndex],
+      floatingActionButton: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(height: 4,),
+          DrawerButton()
+        ],
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startTop,
+    );
+  }
+}
+
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
   }
 }

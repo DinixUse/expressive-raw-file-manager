@@ -60,6 +60,7 @@ class SecureFilePreviewPageState extends State<SecureFilePreviewPage> {
     String fileName = path.basename(widget.file.path);
     return Scaffold(
       appBar: AppBar(
+        leading: const SizedBox(),
         title: Text("Secure: $fileName"),
         actions: [
           IconButton(

@@ -78,18 +78,19 @@ class SecureFolderPageState extends State<SecureFolderPage> {
   Widget build(BuildContext context) {
     if (!authenticated) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Secure Folder")),
+        appBar: AppBar(title: const Text("Secure Folder"), leading: const SizedBox(),),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text("Secure Folder")),
+      appBar: AppBar(title: const Text("Secure Folder"), leading: const SizedBox(),),
       body: RefreshIndicator(
         onRefresh: _loadSecureFolder,
         child: ListView.builder(
           itemCount: secureFiles.length,
           itemBuilder: (context, index) {
             FileSystemEntity entity = secureFiles[index];
+            
             return ListTile(
               leading: Icon(entity is Directory
                   ? Icons.folder

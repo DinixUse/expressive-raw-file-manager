@@ -95,7 +95,7 @@ class StorageAnalyzerPageState extends State<StorageAnalyzerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Storage Analyzer")),
+      appBar: AppBar(title: const Text("Storage Analyzer"), leading: const SizedBox(),),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
