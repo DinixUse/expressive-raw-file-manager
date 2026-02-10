@@ -29,8 +29,8 @@ class SecureFolderPageState extends State<SecureFolderPage> {
       });
       _loadSecureFolder();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Incorrect password. Please try again.")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Incorrect password. Please try again.")));
       _authenticate();
     }
   }
@@ -63,7 +63,7 @@ class SecureFolderPageState extends State<SecureFolderPage> {
 
   Future<void> _loadSecureFolder() async {
     String securePath =
-    path.join("/storage/emulated/0", "RawFileManager", "SecureFolder");
+        path.join("/storage/emulated/0", "RawFileManager", "SecureFolder");
     Directory secureDir = Directory(securePath);
     if (!(await secureDir.exists())) {
       await secureDir.create(recursive: true);
@@ -78,41 +78,52 @@ class SecureFolderPageState extends State<SecureFolderPage> {
   Widget build(BuildContext context) {
     if (!authenticated) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Secure Folder"), leading: const SizedBox(),),
+        appBar: AppBar(
+          title: const Text("Secure Folder"),
+          leading: const SizedBox(),
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
-    return Scaffold(
-      appBar: AppBar(title: const Text("Secure Folder"), leading: const SizedBox(),),
-      body: RefreshIndicator(
-        onRefresh: _loadSecureFolder,
-        child: ListView.builder(
-          itemCount: secureFiles.length,
-          itemBuilder: (context, index) {
-            FileSystemEntity entity = secureFiles[index];
-            
-            return ListTile(
-              leading: Icon(entity is Directory
-                  ? Icons.folder
-                  : Icons.insert_drive_file),
-              title: Text(path.basename(entity.path)),
-              onTap: () {
-                // Only navigate if the entity is a file.
-                if (entity is File) {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) =>
-                              SecureFilePreviewPage(file: entity)));
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Directories are not supported.")));
-                }
-              },
-            );
-          },
+    return OrientationBuilder(builder: (context, orientation) {
+      // 判断是否为横屏
+      bool isLandscape = orientation == Orientation.landscape;
+
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text("Secure Folder"),
+          leading: isLandscape ? null : const SizedBox(),
         ),
-      ),
-    );
+        body: RefreshIndicator(
+          onRefresh: _loadSecureFolder,
+          child: ListView.builder(
+            itemCount: secureFiles.length,
+            itemBuilder: (context, index) {
+              FileSystemEntity entity = secureFiles[index];
+
+              return ListTile(
+                leading: Icon(entity is Directory
+                    ? Icons.folder
+                    : Icons.insert_drive_file),
+                title: Text(path.basename(entity.path)),
+                onTap: () {
+                  // Only navigate if the entity is a file.
+                  if (entity is File) {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) =>
+                                SecureFilePreviewPage(file: entity)));
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text("Directories are not supported.")));
+                  }
+                },
+              );
+            },
+          ),
+        ),
+      );
+    });
   }
 }

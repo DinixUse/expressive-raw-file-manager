@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:archive/archive_io.dart';
 import 'package:open_file/open_file.dart';
+import 'package:raw_file_manager/widgets/expressive_refresh.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import '../widgets/file_search_delegate.dart';
@@ -826,61 +827,155 @@ class HomePageState extends State<HomePage> {
     });
   }
 
+  // 解析当前路径为层级列表
+  List<String> _getPathSegments() {
+    List<String> segments = path.split(currentPath);
+    // 过滤空字符串（处理路径开头/结尾的分隔符）
+    segments = segments.where((s) => s.isNotEmpty).toList();
+    return segments;
+  }
+
+// 跳转到指定层级的路径
+  void _navigateToPathSegment(int index) {
+    List<String> segments = _getPathSegments();
+    if (index < 0 || index >= segments.length) return;
+
+    // 拼接选中层级的完整路径
+    String targetPath = "/" + segments.sublist(0, index + 1).join("/");
+    // 特殊处理Android根目录格式
+    if (targetPath == "/storage/emulated/0") {
+      targetPath = "/storage/emulated/0";
+    }
+
+    setState(() {
+      currentPath = targetPath;
+    });
+    _listFiles();
+  }
+
+  List<Widget> _buildPathIndicator() {
+    List<String> segments = _getPathSegments();
+    List<Widget> widgets = [];
+
+    // 处理根目录（第一个层级）
+    for (int i = 0; i < segments.length; i++) {
+      String segment = segments[i];
+      // 特殊显示根目录名称
+      String displayName = segment;
+      if (i == 0 && segment == "storage") {
+        displayName = "Storage";
+      } else if (i == 2 && segment == "0") {
+        displayName = "Internal Storage";
+      }
+
+      // 添加层级文本按钮
+      widgets.add(
+        InkWell(
+            borderRadius: const BorderRadius.all(Radius.circular(128)),
+            onTap: () => _navigateToPathSegment(i),
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Text(
+                displayName,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            )),
+      );
+
+      // 添加分隔符（最后一个层级不显示）
+      if (i != segments.length - 1) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Icon(
+              Icons.chevron_right,
+              size: 16,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            ),
+          ),
+        );
+      }
+    }
+
+    return widgets;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        // If not at the starting path, navigate to the parent directory.
-        if (currentPath != "/storage/emulated/0") {
-          setState(() {
-            currentPath = Directory(currentPath).parent.path;
-          });
-          _listFiles();
-          return false;
-        }
-        // If at the starting path, require a double-tap back to exit.
-        DateTime now = DateTime.now();
-        if (_lastBackPressed == null ||
-            now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
-          _lastBackPressed = now;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Press back again to exit the app")),
-          );
-          return false;
-        }
-        return true;
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          leading: const SizedBox(),
-          surfaceTintColor: Theme.of(context).colorScheme.surface,
-          bottomOpacity: 1,
-          bottom: const PreferredSize(
-              preferredSize: Size(0, 16), child: SizedBox()),
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          title: !_isMultiSelect
-              ? const Text('Raw File Manager')
-              : Text('${_selectedFiles.length} Selected'),
-          actions: [
-            /*if (!_isMultiSelect)
+    return OrientationBuilder(builder: (context, orientation) {
+      // 判断是否为横屏
+      bool isLandscape = orientation == Orientation.landscape;
+
+      return WillPopScope(
+        onWillPop: () async {
+          // If not at the starting path, navigate to the parent directory.
+          if (currentPath != "/storage/emulated/0") {
+            setState(() {
+              currentPath = Directory(currentPath).parent.path;
+            });
+            _listFiles();
+            return false;
+          }
+          // If at the starting path, require a double-tap back to exit.
+          DateTime now = DateTime.now();
+          if (_lastBackPressed == null ||
+              now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
+            _lastBackPressed = now;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Press back again to exit the app")),
+            );
+            return false;
+          }
+          return true;
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            leading: isLandscape ? null : const SizedBox(),
+            surfaceTintColor: Theme.of(context).colorScheme.surface,
+            bottomOpacity: 1,
+            bottom: PreferredSize(
+              preferredSize: const Size(double.infinity, 48),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: SingleChildScrollView(
+                  reverse: false,
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: _buildPathIndicator(),
+                  ),
+                ),
+              ),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            title: !_isMultiSelect
+                ? const Text('Files')
+                : Text('${_selectedFiles.length} Selected'),
+            actions: [
+              /*if (!_isMultiSelect)
               IconButton.filledTonal(
                 icon: const Icon(Icons.add_box),
                 onPressed: _showAddOptions,
               ),*/
-            if (!_isMultiSelect)
-              IntrinsicHeight(
-                child: ExpressiveFilledButton(
-                  child: const Icon(Icons.search),
-                  onPressed: () {
-                    showSearch(
-                      context: context,
-                      delegate: FileSearchDelegate(
-                          onSearch: _onSearch, initialFiles: files),
-                    );
-                  },
+              if (!_isMultiSelect)
+                IntrinsicHeight(
+                  child: ExpressiveFilledButton(
+                    child: const Icon(Icons.search),
+                    onPressed: () {
+                      showSearch(
+                        context: context,
+                        delegate: FileSearchDelegate(
+                            onSearch: _onSearch, initialFiles: files),
+                      );
+                    },
+                  ),
                 ),
-              ),
-            /*if (!_isMultiSelect)
+              /*if (!_isMultiSelect)
               PopupMenuButton<SortOption>(
                 onSelected: _changeSortOption,
                 icon: const Icon(Icons.sort),
@@ -895,215 +990,221 @@ class HomePageState extends State<HomePage> {
                       value: SortOption.type, child: Text("Sort by Type")),
                 ],
               ),*/
-            const SizedBox(
-              width: 4,
-            ),
-            IntrinsicHeight(
-              child: ExpressiveFilledButton(
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                foregroundColor:
-                    Theme.of(context).colorScheme.onPrimaryContainer,
-                onPressed: () {
-                  if (_isMultiSelect) {
-                    _toggleMultiSelect();
-                  } else {
-                    setState(() {
-                      _isMultiSelect = true;
-                    });
-                  }
-                },
-                child: Icon(
-                  _isMultiSelect ? Icons.clear : Icons.select_all,
+              const SizedBox(
+                width: 4,
+              ),
+              IntrinsicHeight(
+                child: ExpressiveFilledButton(
+                  backgroundColor:
+                      Theme.of(context).colorScheme.primaryContainer,
+                  foregroundColor:
+                      Theme.of(context).colorScheme.onPrimaryContainer,
+                  onPressed: () {
+                    if (_isMultiSelect) {
+                      _toggleMultiSelect();
+                    } else {
+                      setState(() {
+                        _isMultiSelect = true;
+                      });
+                    }
+                  },
+                  child: Icon(
+                    _isMultiSelect ? Icons.clear : Icons.select_all,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(
-              width: 4,
-            ),
-            IntrinsicHeight(
-              child: ExpressiveFilledButton(
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                foregroundColor:
-                    Theme.of(context).colorScheme.onPrimaryContainer,
-                child: Icon(isGridView ? Icons.list : Icons.grid_view),
-                onPressed: () {
-                  setState(() {
-                    isGridView = !isGridView;
-                  });
-                },
+              const SizedBox(
+                width: 4,
               ),
-            ),
-            const SizedBox(
-              width: 16,
-            )
-          ],
-        ),
-        body: RefreshIndicator(
-          onRefresh: _listFiles,
-          child: files.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      MaterialShapes.fourLeafClover(
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 96),
-                      const SizedBox(
-                        height: 4,
-                      ),
-                      MaterialShapes.circle(
-                          color: Theme.of(context).colorScheme.primaryContainer,
-                          size: 24),
-                      const SizedBox(
-                        height: 8,
-                      ),
-                      Text(
-                        "It's empty.",
-                        style: TextStyle(
-                            fontSize: 16,
+              IntrinsicHeight(
+                child: ExpressiveFilledButton(
+                  backgroundColor:
+                      Theme.of(context).colorScheme.tertiaryContainer,
+                  foregroundColor:
+                      Theme.of(context).colorScheme.onTertiaryContainer,
+                  child: Icon(isGridView ? Icons.list : Icons.grid_view),
+                  onPressed: () {
+                    setState(() {
+                      isGridView = !isGridView;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(
+                width: 16,
+              )
+            ],
+          ),
+          body: ExpressiveRefreshIndicator.contained(
+            onRefresh: _listFiles,
+            child: files.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        MaterialShapes.fourLeafClover(
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 96),
+                        const SizedBox(
+                          height: 4,
+                        ),
+                        MaterialShapes.circle(
                             color:
-                                Theme.of(context).colorScheme.inverseSurface),
-                      )
-                    ],
-                  ),
-                )
-              : isGridView
-                  ? GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3),
-                      itemCount: files.length,
-                      itemBuilder: (context, index) {
-                        FileSystemEntity entity = files[index];
-                        bool isSelected = _selectedFiles.contains(entity);
-                        return GestureDetector(
-                          onTap: () => _navigateTo(entity),
-                          onLongPress: () => _onLongPress(entity),
-                          child: Card(
-                            child: Stack(
-                              children: [
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(_getIcon(entity), size: 40),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      path.basename(entity.path),
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(fontSize: 12),
-                                    ),
-                                  ],
-                                ),
-                                if (_isMultiSelect)
-                                  Positioned(
-                                    right: 4,
-                                    top: 4,
-                                    child: Icon(
-                                      isSelected
-                                          ? Icons.check_circle
-                                          : Icons.radio_button_unchecked,
-                                      color: Colors.teal,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    )
-                  : ListView.builder(
-                      itemCount: files.length,
-                      itemBuilder: (context, index) {
-                        FileSystemEntity entity = files[index];
-                        bool isSelected = _selectedFiles.contains(entity);
-
-                        // 定义圆角值常量，方便维护
-                        const double largeRadius = 24.0;
-                        const double smallRadius = 4.0;
-
-                        // 根据索引动态计算圆角
-                        BorderRadius borderRadius;
-                        if (files.length == 1) {
-                          borderRadius = const BorderRadius.all(
-                              Radius.circular(largeRadius));
-                        } else {
-                          if (index == 0) {
-                            borderRadius = const BorderRadius.only(
-                              topLeft: Radius.circular(largeRadius),
-                              topRight: Radius.circular(largeRadius),
-                              bottomLeft: Radius.circular(smallRadius),
-                              bottomRight: Radius.circular(smallRadius),
-                            );
-                          } else if (index == files.length - 1) {
-                            borderRadius = const BorderRadius.only(
-                              topLeft: Radius.circular(smallRadius),
-                              topRight: Radius.circular(smallRadius),
-                              bottomLeft: Radius.circular(largeRadius),
-                              bottomRight: Radius.circular(largeRadius),
-                            );
-                          } else {
-                            borderRadius = const BorderRadius.all(
-                                Radius.circular(smallRadius));
-                          }
-                        }
-                        return Padding(
-                          padding: const EdgeInsets.only(
-                              top: 1, bottom: 1, right: 16, left: 16),
-                          child: ListTile(
-                            tileColor: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerLowest,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: borderRadius),
-                            leading: _isMultiSelect
-                                ? Checkbox(
-                                    value: isSelected,
-                                    onChanged: (_) => _toggleSelection(entity),
-                                  )
-                                : Icon(_getIcon(entity)),
-                            title: Text(path.basename(entity.path)),
-                            subtitle: Text(entity is File
-                                ? "${(entity.statSync().size / 1024).toStringAsFixed(2)} KB"
-                                : "Folder"),
-                            trailing: entity is File
-                                ? Text("${entity.statSync().modified}")
-                                : null,
+                                Theme.of(context).colorScheme.primaryContainer,
+                            size: 24),
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        Text(
+                          "It's empty.",
+                          style: TextStyle(
+                              fontSize: 16,
+                              color:
+                                  Theme.of(context).colorScheme.inverseSurface),
+                        )
+                      ],
+                    ),
+                  )
+                : isGridView
+                    ? GridView.builder(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3),
+                        itemCount: files.length,
+                        itemBuilder: (context, index) {
+                          FileSystemEntity entity = files[index];
+                          bool isSelected = _selectedFiles.contains(entity);
+                          return GestureDetector(
                             onTap: () => _navigateTo(entity),
                             onLongPress: () => _onLongPress(entity),
-                          ),
-                        );
+                            child: Card(
+                              child: Stack(
+                                children: [
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(_getIcon(entity), size: 40),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        path.basename(entity.path),
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                  if (_isMultiSelect)
+                                    Positioned(
+                                      right: 4,
+                                      top: 4,
+                                      child: Icon(
+                                        isSelected
+                                            ? Icons.check_circle
+                                            : Icons.radio_button_unchecked,
+                                        color: Colors.teal,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : ListView.builder(
+                        itemCount: files.length,
+                        itemBuilder: (context, index) {
+                          FileSystemEntity entity = files[index];
+                          bool isSelected = _selectedFiles.contains(entity);
+
+                          // 定义圆角值常量，方便维护
+                          const double largeRadius = 24.0;
+                          const double smallRadius = 4.0;
+
+                          // 根据索引动态计算圆角
+                          BorderRadius borderRadius;
+                          if (files.length == 1) {
+                            borderRadius = const BorderRadius.all(
+                                Radius.circular(largeRadius));
+                          } else {
+                            if (index == 0) {
+                              borderRadius = const BorderRadius.only(
+                                topLeft: Radius.circular(largeRadius),
+                                topRight: Radius.circular(largeRadius),
+                                bottomLeft: Radius.circular(smallRadius),
+                                bottomRight: Radius.circular(smallRadius),
+                              );
+                            } else if (index == files.length - 1) {
+                              borderRadius = const BorderRadius.only(
+                                topLeft: Radius.circular(smallRadius),
+                                topRight: Radius.circular(smallRadius),
+                                bottomLeft: Radius.circular(largeRadius),
+                                bottomRight: Radius.circular(largeRadius),
+                              );
+                            } else {
+                              borderRadius = const BorderRadius.all(
+                                  Radius.circular(smallRadius));
+                            }
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                                top: 1, bottom: 1, right: 16, left: 16),
+                            child: ListTile(
+                              tileColor: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerLowest,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: borderRadius),
+                              leading: _isMultiSelect
+                                  ? Checkbox(
+                                      value: isSelected,
+                                      onChanged: (_) =>
+                                          _toggleSelection(entity),
+                                    )
+                                  : Icon(_getIcon(entity)),
+                              title: Text(path.basename(entity.path)),
+                              subtitle: Text(entity is File
+                                  ? "${(entity.statSync().size / 1024).toStringAsFixed(2)} KB"
+                                  : "Folder"),
+                              trailing: entity is File
+                                  ? Text("${entity.statSync().modified}")
+                                  : null,
+                              onTap: () => _navigateTo(entity),
+                              onLongPress: () => _onLongPress(entity),
+                            ),
+                          );
+                        },
+                      ),
+          ),
+          floatingActionButton: _isMultiSelect
+              ? FloatingActionButton(
+                  onPressed: _deleteSelectedEntities,
+                  child: const Icon(Icons.delete),
+                )
+              : ExpressiveFloatingActionButton(
+                  defaultIcon: Icons.add,
+                  backgroundColor:
+                      Theme.of(context).colorScheme.primaryContainer,
+                  foregroundColor:
+                      Theme.of(context).colorScheme.onPrimaryContainer,
+                  actionItems: [
+                    ActionItem(
+                      icon: Icons.file_open,
+                      label: 'File',
+                      onTap: () {
+                        _createNewFile();
                       },
                     ),
+                    ActionItem(
+                      icon: Icons.folder,
+                      label: 'Folder',
+                      onTap: () {
+                        _createNewFolder();
+                      },
+                    ),
+                  ],
+                ),
         ),
-        floatingActionButton: _isMultiSelect
-            ? FloatingActionButton(
-                onPressed: _deleteSelectedEntities,
-                child: const Icon(Icons.delete),
-              )
-            : ExpressiveFloatingActionButton(
-                defaultIcon: Icons.add,
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                foregroundColor:
-                    Theme.of(context).colorScheme.onPrimaryContainer,
-                actionItems: [
-                  ActionItem(
-                    icon: Icons.file_open,
-                    label: 'File',
-                    onTap: () {
-                      _createNewFile();
-                    },
-                  ),
-                  ActionItem(
-                    icon: Icons.folder,
-                    label: 'Folder',
-                    onTap: () {
-                      _createNewFolder();
-                    },
-                  ),
-                ],
-              ),
-      ),
-    );
+      );
+    });
   }
 }

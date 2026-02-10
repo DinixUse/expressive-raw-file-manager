@@ -49,97 +49,241 @@ class _NavigatorHomeState extends State<NavigatorHome> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: Drawer(
-          child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            const DrawerHeader(
-              child: Text("Raw File Manager", style: TextStyle(fontSize: 24)),
-            ),
-            ListTile(
-              tileColor: _pageIndex == 0 ? Theme.of(context).colorScheme.primaryContainer : null,
-              shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(128))),
-              leading: const Icon(Icons.home),
-              title: const Text("Home"),
-              onTap: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  _pageIndex = 0;
-                });
-              },
-            ),
-            ListTile(
-              tileColor: _pageIndex == 1 ? Theme.of(context).colorScheme.primaryContainer : null,
-              //tileColor: ModalRoute.of(context)?.settings.name == '/recycle_bin'?Theme.of(context).colorScheme.primaryContainer:null,
-              shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(128))),
-              leading: const Icon(Icons.delete),
-              title: const Text("Recycle Bin"),
-              onTap: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  _pageIndex = 1;
-                });
-              },
-            ),
-            ListTile(
-              tileColor: _pageIndex == 2 ? Theme.of(context).colorScheme.primaryContainer : null,
-              //tileColor: ModalRoute.of(context)?.settings.name == '/secure_folder'?Theme.of(context).colorScheme.primaryContainer:null,
-              shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(128))),
-              leading: const Icon(Icons.lock),
-              title: const Text("Secure Folder"),
-              onTap: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  _pageIndex = 2;
-                });
-              },
-            ),
-            ListTile(
-              tileColor: _pageIndex == 3 ? Theme.of(context).colorScheme.primaryContainer : null,
-              //tileColor: ModalRoute.of(context)?.settings.name == '/storage_analyzer'?Theme.of(context).colorScheme.primaryContainer:null,
-              shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(128))),
-              leading: const Icon(Icons.pie_chart),
-              title: const Text("Storage Analyzer"),
-              onTap: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  _pageIndex = 3;
-                });
-              },
-            ),
-            ListTile(
-              tileColor: _pageIndex == 4 ? Theme.of(context).colorScheme.primaryContainer : null,
-              //tileColor: ModalRoute.of(context)?.settings.name == '/storage_analyzer'?Theme.of(context).colorScheme.primaryContainer:null,
-              shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(128))),
-              leading: const Icon(Icons.settings),
-              title: const Text("Settings"),
-              onTap: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  _pageIndex = 4;
-                });
-              },
-            ),
-          ],
-        ),
-      )),
-      body: _pages[_pageIndex],
-      floatingActionButton: const Column(
-        mainAxisSize: MainAxisSize.min,
+    return OrientationBuilder(builder: (context, orientation) {
+      // 判断是否为横屏
+      bool isLandscape = orientation == Orientation.landscape;
+
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(height: 4,),
-          DrawerButton()
+          if (isLandscape)
+            Expanded(
+                flex: 1,
+                child: Scaffold(
+                    body: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: ListView(
+                    children: [
+                      const DrawerHeader(
+                        child: Text("Raw File Manager",
+                            style: TextStyle(fontSize: 24)),
+                      ),
+                      ListTile(
+                        tileColor: _pageIndex == 0
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : null,
+                        shape: const RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(128))),
+                        leading: const Icon(Icons.home),
+                        title: const Text("Home"),
+                        onTap: () {
+                          //Navigator.of(context).pop();
+                          setState(() {
+                            _pageIndex = 0;
+                          });
+                        },
+                      ),
+                      ListTile(
+                        tileColor: _pageIndex == 1
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : null,
+                        //tileColor: ModalRoute.of(context)?.settings.name == '/recycle_bin'?Theme.of(context).colorScheme.primaryContainer:null,
+                        shape: const RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(128))),
+                        leading: const Icon(Icons.delete),
+                        title: const Text("Recycle Bin"),
+                        onTap: () {
+                          //Navigator.of(context).pop();
+                          setState(() {
+                            _pageIndex = 1;
+                          });
+                        },
+                      ),
+                      ListTile(
+                        tileColor: _pageIndex == 2
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : null,
+                        //tileColor: ModalRoute.of(context)?.settings.name == '/secure_folder'?Theme.of(context).colorScheme.primaryContainer:null,
+                        shape: const RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(128))),
+                        leading: const Icon(Icons.lock),
+                        title: const Text("Secure Folder"),
+                        onTap: () {
+                          //Navigator.of(context).pop();
+                          setState(() {
+                            _pageIndex = 2;
+                          });
+                        },
+                      ),
+                      ListTile(
+                        tileColor: _pageIndex == 3
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : null,
+                        //tileColor: ModalRoute.of(context)?.settings.name == '/storage_analyzer'?Theme.of(context).colorScheme.primaryContainer:null,
+                        shape: const RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(128))),
+                        leading: const Icon(Icons.pie_chart),
+                        title: const Text("Storage Analyzer"),
+                        onTap: () {
+                          //Navigator.of(context).pop();
+                          setState(() {
+                            _pageIndex = 3;
+                          });
+                        },
+                      ),
+                      ListTile(
+                        tileColor: _pageIndex == 4
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : null,
+                        //tileColor: ModalRoute.of(context)?.settings.name == '/storage_analyzer'?Theme.of(context).colorScheme.primaryContainer:null,
+                        shape: const RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(128))),
+                        leading: const Icon(Icons.settings),
+                        title: const Text("Settings"),
+                        onTap: () {
+                          //Navigator.of(context).pop();
+                          setState(() {
+                            _pageIndex = 4;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ))),
+          Expanded(
+              flex: 3,
+              child: Scaffold(
+                drawer: isLandscape
+                    ? null
+                    : Drawer(
+                        child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: ListView(
+                          children: [
+                            const DrawerHeader(
+                              child: Text("Raw File Manager",
+                                  style: TextStyle(fontSize: 24)),
+                            ),
+                            ListTile(
+                              tileColor: _pageIndex == 0
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer
+                                  : null,
+                              shape: const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(128))),
+                              leading: const Icon(Icons.home),
+                              title: const Text("Home"),
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                setState(() {
+                                  _pageIndex = 0;
+                                });
+                              },
+                            ),
+                            ListTile(
+                              tileColor: _pageIndex == 1
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer
+                                  : null,
+                              //tileColor: ModalRoute.of(context)?.settings.name == '/recycle_bin'?Theme.of(context).colorScheme.primaryContainer:null,
+                              shape: const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(128))),
+                              leading: const Icon(Icons.delete),
+                              title: const Text("Recycle Bin"),
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                setState(() {
+                                  _pageIndex = 1;
+                                });
+                              },
+                            ),
+                            ListTile(
+                              tileColor: _pageIndex == 2
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer
+                                  : null,
+                              //tileColor: ModalRoute.of(context)?.settings.name == '/secure_folder'?Theme.of(context).colorScheme.primaryContainer:null,
+                              shape: const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(128))),
+                              leading: const Icon(Icons.lock),
+                              title: const Text("Secure Folder"),
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                setState(() {
+                                  _pageIndex = 2;
+                                });
+                              },
+                            ),
+                            ListTile(
+                              tileColor: _pageIndex == 3
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer
+                                  : null,
+                              //tileColor: ModalRoute.of(context)?.settings.name == '/storage_analyzer'?Theme.of(context).colorScheme.primaryContainer:null,
+                              shape: const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(128))),
+                              leading: const Icon(Icons.pie_chart),
+                              title: const Text("Storage Analyzer"),
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                setState(() {
+                                  _pageIndex = 3;
+                                });
+                              },
+                            ),
+                            ListTile(
+                              tileColor: _pageIndex == 4
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer
+                                  : null,
+                              //tileColor: ModalRoute.of(context)?.settings.name == '/storage_analyzer'?Theme.of(context).colorScheme.primaryContainer:null,
+                              shape: const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(128))),
+                              leading: const Icon(Icons.settings),
+                              title: const Text("Settings"),
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                setState(() {
+                                  _pageIndex = 4;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      )),
+                body: _pages[_pageIndex],
+                floatingActionButton: isLandscape
+                    ? null
+                    : const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            height: 2,
+                          ),
+                          DrawerButton()
+                        ],
+                      ),
+                floatingActionButtonLocation:
+                    FloatingActionButtonLocation.startTop,
+              ))
         ],
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.startTop,
-    );
+      );
+    });
   }
 }
 

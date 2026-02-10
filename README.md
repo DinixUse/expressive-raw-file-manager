@@ -31,6 +31,7 @@
 ## Usage Guide
 
 ### Key Features
+
 - **Creating Files/Folders**: Tap the "+" icon on the home screen to create a new file or folder.
 - **Deleting Files/Folders**: Long-press on a file or folder to select it, then tap the delete icon.
 - **Moving Files/Folders**: Long-press to select, then choose the "Move" option from the actions menu.
@@ -42,14 +43,7 @@
 
 ---
 
-## 螢幕截圖
-
----
-
-## Contributor
-<a href = "https://github.com/Anonym0usWork1221/raw-file-manager/graphs/contributors">
-  <img src = "https://contrib.rocks/image?repo=Anonym0usWork1221/raw-file-manager" alt="Contributors"/>
-</a>
+## Screenshots
 
 ---
 

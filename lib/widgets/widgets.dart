@@ -354,7 +354,7 @@ class _ExpressiveFloatingActionButtonState
           ),
 
         Padding(
-          padding: const EdgeInsets.all(16.0), // 保持FAB右下角邊距
+          padding: const EdgeInsets.all(0.0), // 保持FAB右下角邊距
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.end,
