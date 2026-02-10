@@ -45,6 +45,13 @@
 
 ## Screenshots
 
+![](https://github.com/DinixUse/expressive-raw-file-manager/blob/main/screenshots/Screenshot_20260210-193103.png)
+![](https://github.com/DinixUse/expressive-raw-file-manager/blob/main/screenshots/Screenshot_20260210-193114.png)
+![](https://github.com/DinixUse/expressive-raw-file-manager/blob/main/screenshots/Screenshot_20260210-193125.png)
+![](https://github.com/DinixUse/expressive-raw-file-manager/blob/main/screenshots/Screenshot_20260210-193133.png)
+![](https://github.com/DinixUse/expressive-raw-file-manager/blob/main/screenshots/Screenshot_20260210-193136.png)
+![](https://github.com/DinixUse/expressive-raw-file-manager/blob/main/screenshots/Screenshot_20260210-193156.png)
+
 ---
 
 ## License
