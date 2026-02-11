@@ -17,6 +17,7 @@ import 'text_preview_page.dart';
 import 'secure_file_preview_page.dart';
 import 'package:raw_file_manager/widgets/widgets.dart';
 import 'package:material_shapes/material_shapes.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 enum SortOption {
   type,
@@ -262,9 +263,7 @@ class HomePageState extends State<HomePage> {
       return;
     }
     if (entity is Directory) {
-      setState(() {
-        currentPath = entity.path;
-      });
+      currentPath = entity.path;
       _listFiles();
     } else {
       _openFile(entity);
@@ -942,7 +941,7 @@ class HomePageState extends State<HomePage> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: SingleChildScrollView(
-                  reverse: false,
+                  reverse: true,
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1036,145 +1035,190 @@ class HomePageState extends State<HomePage> {
             ],
           ),
           body: ExpressiveRefreshIndicator.contained(
-            onRefresh: _listFiles,
-            child: files.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        MaterialShapes.fourLeafClover(
-                            color: Theme.of(context).colorScheme.primary,
-                            size: 96),
-                        const SizedBox(
-                          height: 4,
-                        ),
-                        MaterialShapes.circle(
-                            color:
-                                Theme.of(context).colorScheme.primaryContainer,
-                            size: 24),
-                        const SizedBox(
-                          height: 8,
-                        ),
-                        Text(
-                          "It's empty.",
-                          style: TextStyle(
-                              fontSize: 16,
-                              color:
-                                  Theme.of(context).colorScheme.inverseSurface),
-                        )
-                      ],
-                    ),
-                  )
-                : isGridView
-                    ? GridView.builder(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3),
-                        itemCount: files.length,
-                        itemBuilder: (context, index) {
-                          FileSystemEntity entity = files[index];
-                          bool isSelected = _selectedFiles.contains(entity);
-                          return GestureDetector(
-                            onTap: () => _navigateTo(entity),
-                            onLongPress: () => _onLongPress(entity),
-                            child: Card(
-                              child: Stack(
-                                children: [
-                                  Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(_getIcon(entity), size: 40),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        path.basename(entity.path),
-                                        overflow: TextOverflow.ellipsis,
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
-                                  if (_isMultiSelect)
-                                    Positioned(
-                                      right: 4,
-                                      top: 4,
-                                      child: Icon(
-                                        isSelected
-                                            ? Icons.check_circle
-                                            : Icons.radio_button_unchecked,
-                                        color: Colors.teal,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      )
-                    : ListView.builder(
-                        itemCount: files.length,
-                        itemBuilder: (context, index) {
-                          FileSystemEntity entity = files[index];
-                          bool isSelected = _selectedFiles.contains(entity);
-
-                          // 定义圆角值常量，方便维护
-                          const double largeRadius = 24.0;
-                          const double smallRadius = 4.0;
-
-                          // 根据索引动态计算圆角
-                          BorderRadius borderRadius;
-                          if (files.length == 1) {
-                            borderRadius = const BorderRadius.all(
-                                Radius.circular(largeRadius));
-                          } else {
-                            if (index == 0) {
-                              borderRadius = const BorderRadius.only(
-                                topLeft: Radius.circular(largeRadius),
-                                topRight: Radius.circular(largeRadius),
-                                bottomLeft: Radius.circular(smallRadius),
-                                bottomRight: Radius.circular(smallRadius),
-                              );
-                            } else if (index == files.length - 1) {
-                              borderRadius = const BorderRadius.only(
-                                topLeft: Radius.circular(smallRadius),
-                                topRight: Radius.circular(smallRadius),
-                                bottomLeft: Radius.circular(largeRadius),
-                                bottomRight: Radius.circular(largeRadius),
-                              );
-                            } else {
-                              borderRadius = const BorderRadius.all(
-                                  Radius.circular(smallRadius));
-                            }
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(
-                                top: 1, bottom: 1, right: 16, left: 16),
-                            child: ListTile(
-                              tileColor: Theme.of(context)
+              onRefresh: _listFiles,
+              child: files.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          MaterialShapes.fourLeafClover(
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 96),
+                          const SizedBox(
+                            height: 4,
+                          ),
+                          MaterialShapes.circle(
+                              color: Theme.of(context)
                                   .colorScheme
-                                  .surfaceContainerLowest,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: borderRadius),
-                              leading: _isMultiSelect
-                                  ? Checkbox(
-                                      value: isSelected,
-                                      onChanged: (_) =>
-                                          _toggleSelection(entity),
-                                    )
-                                  : Icon(_getIcon(entity)),
-                              title: Text(path.basename(entity.path)),
-                              subtitle: Text(entity is File
-                                  ? "${(entity.statSync().size / 1024).toStringAsFixed(2)} KB"
-                                  : "Folder"),
-                              trailing: entity is File
-                                  ? Text("${entity.statSync().modified}")
-                                  : null,
+                                  .primaryContainer,
+                              size: 24),
+                          const SizedBox(
+                            height: 8,
+                          ),
+                          Text(
+                            "It's empty.",
+                            style: TextStyle(
+                                fontSize: 16,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .inverseSurface),
+                          )
+                        ],
+                      ),
+                    )
+                  : isGridView
+                      ? GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 3),
+                          itemCount: files.length,
+                          itemBuilder: (context, index) {
+                            FileSystemEntity entity = files[index];
+                            bool isSelected = _selectedFiles.contains(entity);
+                            return GestureDetector(
                               onTap: () => _navigateTo(entity),
                               onLongPress: () => _onLongPress(entity),
-                            ),
-                          );
-                        },
-                      ),
-          ),
+                              child: Card(
+                                child: Stack(
+                                  children: [
+                                    Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(_getIcon(entity), size: 40),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          path.basename(entity.path),
+                                          overflow: TextOverflow.ellipsis,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(fontSize: 12),
+                                        ),
+                                      ],
+                                    ),
+                                    if (_isMultiSelect)
+                                      Positioned(
+                                        right: 4,
+                                        top: 4,
+                                        child: Icon(
+                                          isSelected
+                                              ? Icons.check_circle
+                                              : Icons.radio_button_unchecked,
+                                          color: Colors.teal,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      : AnimationLimiter(
+                          key: ValueKey(
+                              'animation_${currentPath}_${DateTime.now().microsecondsSinceEpoch}'),
+                          child: ListView.builder(
+                            itemCount: files.length,
+                            itemBuilder: (context, index) {
+                              FileSystemEntity entity = files[index];
+                              bool isSelected = _selectedFiles.contains(entity);
+
+                              // 定义圆角值常量，方便维护
+                              const double largeRadius = 24.0;
+                              const double smallRadius = 4.0;
+
+                              // 根据索引动态计算圆角
+                              BorderRadius borderRadius;
+                              if (files.length == 1) {
+                                borderRadius = const BorderRadius.all(
+                                    Radius.circular(largeRadius));
+                              } else {
+                                if (index == 0) {
+                                  borderRadius = const BorderRadius.only(
+                                    topLeft: Radius.circular(largeRadius),
+                                    topRight: Radius.circular(largeRadius),
+                                    bottomLeft: Radius.circular(smallRadius),
+                                    bottomRight: Radius.circular(smallRadius),
+                                  );
+                                } else if (index == files.length - 1) {
+                                  borderRadius = const BorderRadius.only(
+                                    topLeft: Radius.circular(smallRadius),
+                                    topRight: Radius.circular(smallRadius),
+                                    bottomLeft: Radius.circular(largeRadius),
+                                    bottomRight: Radius.circular(largeRadius),
+                                  );
+                                } else {
+                                  borderRadius = const BorderRadius.all(
+                                      Radius.circular(smallRadius));
+                                }
+                              }
+                              return AnimationConfiguration.staggeredList(
+                                  position: index,
+                                  duration: const Duration(milliseconds: 375),
+                                  delay: const Duration(milliseconds: 20),
+                                  child: SlideAnimation(
+                                      verticalOffset: 3.0,
+                                      curve: Curves.fastOutSlowIn,
+                                      child: FadeInAnimation(
+                                        curve: Curves.fastOutSlowIn,
+                                          child: Padding(
+                                        padding: const EdgeInsets.only(
+                                            top: 2,
+                                            bottom: 2,
+                                            right: 16,
+                                            left: 16),
+                                        child: ListTile(
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                  horizontal: 24.0),
+                                          tileColor: isSelected
+                                              ? Theme.of(context)
+                                                  .colorScheme
+                                                  .secondaryContainer
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .surfaceContainerLowest,
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius: isSelected
+                                                  ? const BorderRadius.all(
+                                                      Radius.circular(128))
+                                                  : borderRadius),
+                                          leading: _isMultiSelect
+                                              ? isSelected
+                                                  ? Icon(
+                                                      Icons.check_circle,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
+                                                    )
+                                                  : Icon(_getIcon(entity))
+                                              : Icon(_getIcon(entity)),
+                                          title:
+                                              Text(path.basename(entity.path)),
+                                          subtitle: Text(entity is File
+                                              ? "${(entity.statSync().size / 1024).toStringAsFixed(2)} KB"
+                                              : "Folder"),
+                                          trailing: _isMultiSelect
+                                              ? null
+                                              : IconButton(
+                                                  onPressed: () =>
+                                                      _onLongPress(entity),
+                                                  icon: const Icon(
+                                                      Icons.more_vert)),
+                                          onTap: () {
+                                            _navigateTo(entity);
+
+                                            setState(() {});
+                                          },
+                                          onLongPress: () {
+                                            setState(() {
+                                              _isMultiSelect = true;
+                                              _toggleSelection(entity);
+                                            });
+                                          },
+                                        ),
+                                      ))));
+                            },
+                          ),
+                        )),
           floatingActionButton: _isMultiSelect
               ? FloatingActionButton(
                   onPressed: _deleteSelectedEntities,

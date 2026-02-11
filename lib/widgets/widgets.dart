@@ -25,6 +25,7 @@ class ExpressiveFilledButton extends StatefulWidget {
 class _ExpressiveFilledButtonState extends State<ExpressiveFilledButton>
     with SingleTickerProviderStateMixin {
   bool _isPressed = false;
+  bool _isAnimating = false; // 防止重复点击的锁
   late AnimationController _controller;
   late Animation<double> _borderRadiusAnimation;
   late Animation<double> _widthAnimation;
@@ -55,11 +56,37 @@ class _ExpressiveFilledButtonState extends State<ExpressiveFilledButton>
   }
 
   void _updateChildWidth() {
-    final RenderBox renderBox =
-        _containerKey.currentContext!.findRenderObject() as RenderBox;
-    setState(() {
-      _childWidth = renderBox.size.width;
-    });
+    final RenderBox? renderBox =
+        _containerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox != null) {
+      setState(() {
+        _childWidth = renderBox.size.width;
+      });
+    }
+  }
+
+  // 执行完整的动画序列
+  Future<void> _playCompleteAnimation() async {
+    if (_isAnimating) return; // 如果正在动画，直接返回
+    _isAnimating = true;
+    
+    try {
+      // 执行点击回调
+      widget.onPressed();
+      
+      // 正向播放动画（变大、变方）
+      setState(() => _isPressed = true);
+      await _controller.forward().orCancel;
+      
+      // 反向播放动画（恢复原状）
+      await _controller.reverse().orCancel;
+      if(mounted) setState(() => _isPressed = false);
+    } catch (_) {
+      // 处理动画被中断的情况
+      if(mounted) setState(() => _isPressed = false);
+    } finally {
+      _isAnimating = false; // 释放锁
+    }
   }
 
   @override
@@ -79,7 +106,7 @@ class _ExpressiveFilledButtonState extends State<ExpressiveFilledButton>
       );
     } else if (widget.child is Text) {
       coloredChild = Padding(
-        padding: EdgeInsets.only(left: 12, right: 12),
+        padding: const EdgeInsets.only(left: 12, right: 12),
         child: Text(
           (widget.child as Text).data!,
           style: (widget.child as Text).style?.copyWith(
@@ -93,26 +120,13 @@ class _ExpressiveFilledButtonState extends State<ExpressiveFilledButton>
     } else {
       coloredChild = widget.child;
     }
+    
     return GestureDetector(
-      onTapDown: (_) {
-        _controller.forward();
-        setState(() {
-          _isPressed = true;
-        });
-      },
-      onTapUp: (_) {
-        _controller.reverse();
-        setState(() {
-          _isPressed = false;
-        });
-        widget.onPressed();
-      },
-      onTapCancel: () {
-        _controller.reverse();
-        setState(() {
-          _isPressed = false;
-        });
-      },
+      // 修改为onTap触发完整动画
+      onTap: _playCompleteAnimation,
+      // 保留视觉反馈（可选）
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
@@ -151,6 +165,7 @@ class ExpressiveOutlinedButton extends StatefulWidget {
 class _ExpressiveOutlinedButtonState extends State<ExpressiveOutlinedButton>
     with SingleTickerProviderStateMixin {
   bool _isPressed = false;
+  bool _isAnimating = false; // 防止重复点击的锁
   late AnimationController _controller;
   late Animation<double> _borderRadiusAnimation;
   late Animation<double> _widthAnimation;
@@ -181,11 +196,36 @@ class _ExpressiveOutlinedButtonState extends State<ExpressiveOutlinedButton>
   }
 
   void _updateChildWidth() {
-    final RenderBox renderBox =
-        _containerKey.currentContext!.findRenderObject() as RenderBox;
-    setState(() {
-      _childWidth = renderBox.size.width;
-    });
+    final RenderBox? renderBox =
+        _containerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox != null) {
+      setState(() {
+        _childWidth = renderBox.size.width;
+      });
+    }
+  }
+
+  // 执行完整的动画序列
+  Future<void> _playCompleteAnimation() async {
+    if (_isAnimating) return;
+    _isAnimating = true;
+    
+    try {
+      // 执行点击回调
+      widget.onPressed();
+      
+      // 正向播放动画
+      setState(() => _isPressed = true);
+      await _controller.forward().orCancel;
+      
+      // 反向播放动画
+      await _controller.reverse().orCancel;
+      if(mounted) setState(() => _isPressed = false);
+    } catch (_) {
+      if(mounted) setState(() => _isPressed = false);
+    } finally {
+      _isAnimating = false;
+    }
   }
 
   @override
@@ -204,7 +244,7 @@ class _ExpressiveOutlinedButtonState extends State<ExpressiveOutlinedButton>
       );
     } else if (widget.child is Text) {
       coloredChild = Padding(
-        padding: EdgeInsets.only(left: 12, right: 12),
+        padding: const EdgeInsets.only(left: 12, right: 12),
         child: Text(
           (widget.child as Text).data!,
           style: (widget.child as Text).style?.copyWith(
@@ -216,26 +256,13 @@ class _ExpressiveOutlinedButtonState extends State<ExpressiveOutlinedButton>
     } else {
       coloredChild = widget.child;
     }
+    
     return GestureDetector(
-      onTapDown: (_) {
-        _controller.forward();
-        setState(() {
-          _isPressed = true;
-        });
-      },
-      onTapUp: (_) {
-        _controller.reverse();
-        setState(() {
-          _isPressed = false;
-        });
-        widget.onPressed();
-      },
-      onTapCancel: () {
-        _controller.reverse();
-        setState(() {
-          _isPressed = false;
-        });
-      },
+      // 修改为onTap触发完整动画
+      onTap: _playCompleteAnimation,
+      // 保留视觉反馈（可选）
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
@@ -256,6 +283,7 @@ class _ExpressiveOutlinedButtonState extends State<ExpressiveOutlinedButton>
     );
   }
 }
+
 
 class ExpressiveFloatingActionButton extends StatefulWidget {
   final List<ActionItem> actionItems;
