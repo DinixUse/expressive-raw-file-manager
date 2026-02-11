@@ -44,6 +44,8 @@ class HomePageState extends State<HomePage> {
 
   DateTime? _lastBackPressed;
 
+  int _listAnimationKey = 0;
+
   @override
   void initState() {
     super.initState();
@@ -201,6 +203,7 @@ class HomePageState extends State<HomePage> {
     });
     setState(() {
       files = entities;
+      _listAnimationKey++;
     });
   }
 
@@ -319,6 +322,7 @@ class HomePageState extends State<HomePage> {
       return;
     }
     showModalBottomSheet(
+      isScrollControlled: true,
       showDragHandle: true,
       context: context,
       builder: (context) {
@@ -373,7 +377,7 @@ class HomePageState extends State<HomePage> {
         if (entity is File &&
             ['.txt', '.md', '.json', '.xml']
                 .contains(path.extension(entity.path).toLowerCase())) {
-          options.add(
+          options.addAll([
             ListTile(
               shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(4))),
@@ -385,7 +389,10 @@ class HomePageState extends State<HomePage> {
                 _editFileContent(entity);
               },
             ),
-          );
+            const SizedBox(
+              height: 2,
+            ),
+          ]);
         }
         options.addAll([
           ListTile(
@@ -432,8 +439,9 @@ class HomePageState extends State<HomePage> {
             },
           ),
         ]);
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16, right: 16, left: 16),
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.65,
+          padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: options,
@@ -1112,111 +1120,116 @@ class HomePageState extends State<HomePage> {
                             );
                           },
                         )
-                      : AnimationLimiter(
-                          key: ValueKey(
-                              'animation_${currentPath}_${DateTime.now().microsecondsSinceEpoch}'),
-                          child: ListView.builder(
-                            itemCount: files.length,
-                            itemBuilder: (context, index) {
-                              FileSystemEntity entity = files[index];
-                              bool isSelected = _selectedFiles.contains(entity);
+                      : Container(
+                          padding: const EdgeInsets.only(bottom: 84),
+                          child: AnimationLimiter(
+                            key: ValueKey(_listAnimationKey),
+                            child: ListView.builder(
+                              itemCount: files.length,
+                              itemBuilder: (context, index) {
+                                FileSystemEntity entity = files[index];
+                                bool isSelected =
+                                    _selectedFiles.contains(entity);
 
-                              // 定义圆角值常量，方便维护
-                              const double largeRadius = 24.0;
-                              const double smallRadius = 4.0;
+                                // 定义圆角值常量，方便维护
+                                const double largeRadius = 24.0;
+                                const double smallRadius = 4.0;
 
-                              // 根据索引动态计算圆角
-                              BorderRadius borderRadius;
-                              if (files.length == 1) {
-                                borderRadius = const BorderRadius.all(
-                                    Radius.circular(largeRadius));
-                              } else {
-                                if (index == 0) {
-                                  borderRadius = const BorderRadius.only(
-                                    topLeft: Radius.circular(largeRadius),
-                                    topRight: Radius.circular(largeRadius),
-                                    bottomLeft: Radius.circular(smallRadius),
-                                    bottomRight: Radius.circular(smallRadius),
-                                  );
-                                } else if (index == files.length - 1) {
-                                  borderRadius = const BorderRadius.only(
-                                    topLeft: Radius.circular(smallRadius),
-                                    topRight: Radius.circular(smallRadius),
-                                    bottomLeft: Radius.circular(largeRadius),
-                                    bottomRight: Radius.circular(largeRadius),
-                                  );
-                                } else {
+                                // 根据索引动态计算圆角
+                                BorderRadius borderRadius;
+                                if (files.length == 1) {
                                   borderRadius = const BorderRadius.all(
-                                      Radius.circular(smallRadius));
+                                      Radius.circular(largeRadius));
+                                } else {
+                                  if (index == 0) {
+                                    borderRadius = const BorderRadius.only(
+                                      topLeft: Radius.circular(largeRadius),
+                                      topRight: Radius.circular(largeRadius),
+                                      bottomLeft: Radius.circular(smallRadius),
+                                      bottomRight: Radius.circular(smallRadius),
+                                    );
+                                  } else if (index == files.length - 1) {
+                                    borderRadius = const BorderRadius.only(
+                                      topLeft: Radius.circular(smallRadius),
+                                      topRight: Radius.circular(smallRadius),
+                                      bottomLeft: Radius.circular(largeRadius),
+                                      bottomRight: Radius.circular(largeRadius),
+                                    );
+                                  } else {
+                                    borderRadius = const BorderRadius.all(
+                                        Radius.circular(smallRadius));
+                                  }
                                 }
-                              }
-                              return AnimationConfiguration.staggeredList(
-                                  position: index,
-                                  duration: const Duration(milliseconds: 375),
-                                  delay: const Duration(milliseconds: 20),
-                                  child: SlideAnimation(
-                                      verticalOffset: 3.0,
-                                      curve: Curves.fastOutSlowIn,
-                                      child: FadeInAnimation(
+                                return AnimationConfiguration.staggeredList(
+                                    position: index,
+                                    duration: const Duration(milliseconds: 375),
+                                    delay: const Duration(milliseconds: 20),
+                                    child: SlideAnimation(
+                                        verticalOffset: 3.0,
                                         curve: Curves.fastOutSlowIn,
-                                          child: Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 2,
-                                            bottom: 2,
-                                            right: 16,
-                                            left: 16),
-                                        child: ListTile(
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                  horizontal: 24.0),
-                                          tileColor: isSelected
-                                              ? Theme.of(context)
-                                                  .colorScheme
-                                                  .secondaryContainer
-                                              : Theme.of(context)
-                                                  .colorScheme
-                                                  .surfaceContainerLowest,
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius: isSelected
-                                                  ? const BorderRadius.all(
-                                                      Radius.circular(128))
-                                                  : borderRadius),
-                                          leading: _isMultiSelect
-                                              ? isSelected
-                                                  ? Icon(
-                                                      Icons.check_circle,
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .primary,
-                                                    )
-                                                  : Icon(_getIcon(entity))
-                                              : Icon(_getIcon(entity)),
-                                          title:
-                                              Text(path.basename(entity.path)),
-                                          subtitle: Text(entity is File
-                                              ? "${(entity.statSync().size / 1024).toStringAsFixed(2)} KB"
-                                              : "Folder"),
-                                          trailing: _isMultiSelect
-                                              ? null
-                                              : IconButton(
-                                                  onPressed: () =>
-                                                      _onLongPress(entity),
-                                                  icon: const Icon(
-                                                      Icons.more_vert)),
-                                          onTap: () {
-                                            _navigateTo(entity);
-
-                                            setState(() {});
-                                          },
-                                          onLongPress: () {
-                                            setState(() {
-                                              _isMultiSelect = true;
-                                              _toggleSelection(entity);
-                                            });
-                                          },
-                                        ),
-                                      ))));
-                            },
+                                        child: FadeInAnimation(
+                                            curve: Curves.fastOutSlowIn,
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                  top: 1,
+                                                  bottom: 1,
+                                                  right: 16,
+                                                  left: 16),
+                                              child: ListTile(
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 24.0),
+                                                tileColor: isSelected
+                                                    ? Theme.of(context)
+                                                        .colorScheme
+                                                        .secondaryContainer
+                                                    : Theme.of(context)
+                                                        .colorScheme
+                                                        .surfaceContainerLowest,
+                                                shape: RoundedRectangleBorder(
+                                                    borderRadius: isSelected
+                                                        ? const BorderRadius
+                                                            .all(
+                                                            Radius.circular(
+                                                                128))
+                                                        : borderRadius),
+                                                leading: _isMultiSelect
+                                                    ? isSelected
+                                                        ? Icon(
+                                                            Icons.check_circle,
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .colorScheme
+                                                                .primary,
+                                                          )
+                                                        : Icon(_getIcon(entity))
+                                                    : Icon(_getIcon(entity)),
+                                                title: Text(
+                                                    path.basename(entity.path)),
+                                                subtitle: Text(entity is File
+                                                    ? "${(entity.statSync().size / 1024).toStringAsFixed(2)} KB"
+                                                    : "Folder"),
+                                                trailing: _isMultiSelect
+                                                    ? null
+                                                    : IconButton(
+                                                        onPressed: () =>
+                                                            _onLongPress(
+                                                                entity),
+                                                        icon: const Icon(
+                                                            Icons.more_vert)),
+                                                onTap: () {
+                                                  _navigateTo(entity);
+                                                },
+                                                onLongPress: () {
+                                                  setState(() {
+                                                    _isMultiSelect = true;
+                                                    _toggleSelection(entity);
+                                                  });
+                                                },
+                                              ),
+                                            ))));
+                              },
+                            ),
                           ),
                         )),
           floatingActionButton: _isMultiSelect
