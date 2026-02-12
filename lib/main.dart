@@ -67,10 +67,24 @@ class _RawFileManagerAppState extends State<RawFileManagerApp> {
             title: 'Raw File Manager',
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
+              pageTransitionsTheme: const PageTransitionsTheme(
+                builders: <TargetPlatform, PageTransitionsBuilder>{
+                  // Set the predictive back transitions for Android.
+                  TargetPlatform.android:
+                      PredictiveBackPageTransitionsBuilder(),
+                },
+              ),
               colorScheme: lightColorScheme,
               useMaterial3: true,
             ),
             darkTheme: ThemeData(
+              pageTransitionsTheme: const PageTransitionsTheme(
+                builders: <TargetPlatform, PageTransitionsBuilder>{
+                  // Set the predictive back transitions for Android.
+                  TargetPlatform.android:
+                      PredictiveBackPageTransitionsBuilder(),
+                },
+              ),
               colorScheme: darkColorScheme,
               useMaterial3: true,
             ),
@@ -192,6 +206,7 @@ class _NavigatorHomeState extends State<NavigatorHome> {
           Expanded(
             flex: 3,
             child: Scaffold(
+              drawerEdgeDragWidth: 0,
               drawer: isLandscape
                   ? null
                   : Drawer(
@@ -207,10 +222,13 @@ class _NavigatorHomeState extends State<NavigatorHome> {
                             ),
                             ListTile(
                               tileColor: _pageIndex == 0
-                                  ? Theme.of(context).colorScheme.primaryContainer
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer
                                   : null,
                               shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(Radius.circular(128)),
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(128)),
                               ),
                               leading: const Icon(Icons.home),
                               title: const Text("Home"),
@@ -221,10 +239,13 @@ class _NavigatorHomeState extends State<NavigatorHome> {
                             ),
                             ListTile(
                               tileColor: _pageIndex == 1
-                                  ? Theme.of(context).colorScheme.primaryContainer
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer
                                   : null,
                               shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(Radius.circular(128)),
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(128)),
                               ),
                               leading: const Icon(Icons.delete),
                               title: const Text("Recycle Bin"),
@@ -235,10 +256,13 @@ class _NavigatorHomeState extends State<NavigatorHome> {
                             ),
                             ListTile(
                               tileColor: _pageIndex == 2
-                                  ? Theme.of(context).colorScheme.primaryContainer
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer
                                   : null,
                               shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(Radius.circular(128)),
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(128)),
                               ),
                               leading: const Icon(Icons.lock),
                               title: const Text("Secure Folder"),
@@ -249,10 +273,13 @@ class _NavigatorHomeState extends State<NavigatorHome> {
                             ),
                             ListTile(
                               tileColor: _pageIndex == 3
-                                  ? Theme.of(context).colorScheme.primaryContainer
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer
                                   : null,
                               shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(Radius.circular(128)),
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(128)),
                               ),
                               leading: const Icon(Icons.pie_chart),
                               title: const Text("Storage Analyzer"),
@@ -263,10 +290,13 @@ class _NavigatorHomeState extends State<NavigatorHome> {
                             ),
                             ListTile(
                               tileColor: _pageIndex == 4
-                                  ? Theme.of(context).colorScheme.primaryContainer
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer
                                   : null,
                               shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(Radius.circular(128)),
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(128)),
                               ),
                               leading: const Icon(Icons.settings),
                               title: const Text("Settings"),
