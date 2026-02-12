@@ -41,6 +41,7 @@ class HomePageState extends State<HomePage> {
 
   bool _isMultiSelect = false;
   final Set<FileSystemEntity> _selectedFiles = {};
+  final Set<FileSystemEntity> _selectedActionFiles = {};
 
   DateTime? _lastBackPressed;
 
@@ -54,7 +55,7 @@ class HomePageState extends State<HomePage> {
     setState(() {
       _isCopying = true;
       _isMoving = isMove;
-      if (entity != null) _selectedFiles.add(entity);
+      if (entity != null) _selectedActionFiles.add(entity);
     });
   }
 
@@ -195,22 +196,20 @@ class HomePageState extends State<HomePage> {
           .toList();
     }
     entities.sort((a, b) {
-      switch (currentSortOption) {
-        case SortOption.name:
-          return path
-              .basename(a.path)
-              .toLowerCase()
-              .compareTo(path.basename(b.path).toLowerCase());
-        case SortOption.date:
-          return a.statSync().modified.compareTo(b.statSync().modified);
-        case SortOption.size:
-          int aSize = a is File ? a.statSync().size : 0;
-          int bSize = b is File ? b.statSync().size : 0;
-          return aSize.compareTo(bSize);
-        case SortOption.type:
-          return path.extension(a.path).compareTo(path.extension(b.path));
-        default:
-          return 0;
+      // 首先区分文件夹和文件，文件夹排在前面
+      bool aIsDir = a is Directory;
+      bool bIsDir = b is Directory;
+
+      if (aIsDir && !bIsDir) {
+        return -1; // a是文件夹，b是文件，a排在前面
+      } else if (!aIsDir && bIsDir) {
+        return 1; // a是文件，b是文件夹，b排在前面
+      } else {
+        // 同为文件夹或同为文件时，按名称排序（不区分大小写）
+        return path
+            .basename(a.path)
+            .toLowerCase()
+            .compareTo(path.basename(b.path).toLowerCase());
       }
     });
     setState(() {
@@ -362,8 +361,8 @@ class HomePageState extends State<HomePage> {
             shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(4))),
             tileColor: Theme.of(context).colorScheme.surfaceContainerLowest,
-            leading: const Icon(Icons.drive_file_move),
-            title: const Text('Move'),
+            leading: const Icon(Icons.cut),
+            title: const Text('Cut'),
             onTap: () {
               Navigator.pop(context);
               //_moveEntity(entity);
@@ -1011,6 +1010,65 @@ class HomePageState extends State<HomePage> {
                       value: SortOption.type, child: Text("Sort by Type")),
                 ],
               ),*/
+              if (_isMultiSelect && !_isCopying && !_isMoving) ...[
+                const SizedBox(
+                  width: 4,
+                ),
+                IntrinsicHeight(
+                  child: ExpressiveFilledButton(
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                    foregroundColor:
+                        Theme.of(context).colorScheme.onPrimaryContainer,
+                    child: const Icon(Icons.copy),
+                    onPressed: () {
+                      setState(() {
+                        _isCopying = true;
+                        _isMoving = false;
+                        _selectedActionFiles.addAll(_selectedFiles);
+                        _isMultiSelect = false;
+                        _selectedFiles.clear();
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(
+                  width: 4,
+                ),
+                IntrinsicHeight(
+                  child: ExpressiveFilledButton(
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                    foregroundColor:
+                        Theme.of(context).colorScheme.onPrimaryContainer,
+                    child: const Icon(Icons.cut),
+                    onPressed: () {
+                      setState(() {
+                        _isCopying = true;
+                        _isMoving = true;
+                        _selectedActionFiles.addAll(_selectedFiles);
+                        _isMultiSelect = false;
+                        _selectedFiles.clear();
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(
+                  width: 4,
+                ),
+                IntrinsicHeight(
+                  child: ExpressiveFilledButton(
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                    foregroundColor:
+                        Theme.of(context).colorScheme.onPrimaryContainer,
+                    child: const Icon(Icons.delete),
+                    onPressed: () {
+                      _deleteSelectedEntities();
+                    },
+                  ),
+                ),
+              ],
               const SizedBox(
                 width: 4,
               ),
@@ -1237,12 +1295,7 @@ class HomePageState extends State<HomePage> {
                         ),
                       ),
           ),
-          floatingActionButton: _isMultiSelect
-              ? FloatingActionButton(
-                  onPressed: _deleteSelectedEntities,
-                  child: const Icon(Icons.delete),
-                )
-              : ExpressiveFloatingActionButton(
+          floatingActionButton: ExpressiveFloatingActionButton(
                   defaultIcon: Icons.add,
                   backgroundColor:
                       Theme.of(context).colorScheme.primaryContainer,
@@ -1268,17 +1321,17 @@ class HomePageState extends State<HomePage> {
           persistentFooterButtons: _isCopying
               ? [
                   Container(
-                    height: 48,
+                    height: 72,
                     color: Colors.transparent,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 0, vertical: 0),
                       child: Center(
                         child: Container(
-                            width: MediaQuery.of(context).size.width - 16 <= 450
-                                ? MediaQuery.of(context).size.width - 16
-                                : 450,
-                            height: 48,
+                            width: MediaQuery.of(context).size.width - 48 <= 480
+                                ? MediaQuery.of(context).size.width - 48
+                                : 480,
+                            height: 72,
                             decoration: BoxDecoration(
                               borderRadius:
                                   const BorderRadius.all(Radius.circular(128)),
@@ -1287,19 +1340,27 @@ class HomePageState extends State<HomePage> {
                                   .primaryContainer,
                             ),
                             child: Padding(
-                              padding: const EdgeInsets.all(6),
+                              padding: const EdgeInsets.all(10),
                               child: Row(
                                 children: [
                                   SizedBox(
-                                    child: CircleAvatar(
-                                      backgroundColor: Theme.of(context)
-                                          .colorScheme
-                                          .surfaceContainerLow,
-                                      child: Text("${_selectedFiles.length}"),
+                                    width: 54,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(48),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainerLowest,
+                                      ),
+                                      child: Center(
+                                          child: Text(
+                                        "${_selectedActionFiles.length}",
+                                        style: const TextStyle(fontSize: 16),
+                                      )),
                                     ),
                                   ),
                                   const SizedBox(
-                                    width: 6,
+                                    width: 10,
                                   ),
                                   Expanded(
                                     flex: 1,
@@ -1316,6 +1377,7 @@ class HomePageState extends State<HomePage> {
                                             setState(() {
                                               _isCopying = false;
                                               _isMoving = false;
+                                              _selectedActionFiles.clear();
                                             });
                                           },
                                           child: Container(
@@ -1329,16 +1391,19 @@ class HomePageState extends State<HomePage> {
                                                     BorderRadius.circular(48),
                                                 color: Theme.of(context)
                                                     .colorScheme
-                                                    .surfaceContainerLow,
+                                                    .surfaceContainerLowest,
                                               ),
                                               child: const Center(
-                                                  child: Text("Cancel")),
+                                                  child: Text(
+                                                "Cancel",
+                                                style: TextStyle(fontSize: 16),
+                                              )),
                                             ),
                                           ),
                                         )),
                                   ),
                                   const SizedBox(
-                                    width: 6,
+                                    width: 10,
                                   ),
                                   Expanded(
                                     flex: 1,
@@ -1351,10 +1416,33 @@ class HomePageState extends State<HomePage> {
                                         child: InkWell(
                                           borderRadius:
                                               BorderRadius.circular(48),
-                                          onTap: () {
+                                          onTap: () async {
+                                            try {
+                                              List<String> selectedPaths =
+                                                  _selectedActionFiles
+                                                      .map((entity) =>
+                                                          entity.path)
+                                                      .toList();
+
+                                              await bulkActionFiles(
+                                                selectedPaths,
+                                                _isMoving,
+                                                currentPath,
+                                                onCompleted: (bool isSuccess,
+                                                    int fileCount) {
+                                                  // 回调逻辑
+                                                  if (mounted) {
+                                                    _listFiles();
+                                                  }
+                                                },
+                                              );
+                                            } catch (e) {
+                                              print(e);
+                                            }
                                             setState(() {
                                               _isCopying = false;
                                               _isMoving = false;
+                                              _selectedActionFiles.clear();
                                             });
                                           },
                                           child: Container(
@@ -1368,10 +1456,13 @@ class HomePageState extends State<HomePage> {
                                                     BorderRadius.circular(48),
                                                 color: Theme.of(context)
                                                     .colorScheme
-                                                    .surfaceContainerLow,
+                                                    .surfaceContainerLowest,
                                               ),
                                               child: const Center(
-                                                  child: Text("Paste")),
+                                                  child: Text(
+                                                "Paste",
+                                                style: TextStyle(fontSize: 16),
+                                              )),
                                             ),
                                           ),
                                         )),

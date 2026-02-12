@@ -58,7 +58,7 @@ class ExpressiveRefreshIndicator extends StatefulWidget {
     this.polygons,
     this.indicatorConstraints,
     this.onStatusChange,
-  }) : _indicatorType = _IndicatorType.expressive,
+  })  : _indicatorType = _IndicatorType.expressive,
         strokeWidth = 0.0, // Not used in expressive mode
         assert(elevation >= 0.0),
         assert(polygons != null ? polygons.length > 1 : true);
@@ -80,7 +80,7 @@ class ExpressiveRefreshIndicator extends StatefulWidget {
     this.polygons,
     this.indicatorConstraints,
     this.onStatusChange,
-  }) : _indicatorType = _IndicatorType.contained,
+  })  : _indicatorType = _IndicatorType.contained,
         strokeWidth = 0.0, // Not used in expressive mode
         assert(elevation >= 0.0),
         assert(polygons != null ? polygons.length > 1 : true);
@@ -101,7 +101,7 @@ class ExpressiveRefreshIndicator extends StatefulWidget {
     this.triggerMode = RefreshIndicatorTriggerMode.onEdge,
     this.elevation = 2.0,
     this.onStatusChange,
-  }) : _indicatorType = _IndicatorType.material,
+  })  : _indicatorType = _IndicatorType.material,
         polygons = null,
         indicatorConstraints = null,
         assert(elevation >= 0.0);
@@ -122,7 +122,7 @@ class ExpressiveRefreshIndicator extends StatefulWidget {
     this.triggerMode = RefreshIndicatorTriggerMode.onEdge,
     this.elevation = 2.0,
     this.onStatusChange,
-  }) : _indicatorType = _IndicatorType.adaptive,
+  })  : _indicatorType = _IndicatorType.adaptive,
         polygons = null,
         indicatorConstraints = null,
         assert(elevation >= 0.0);
@@ -138,7 +138,7 @@ class ExpressiveRefreshIndicator extends StatefulWidget {
     this.semanticsValue,
     this.triggerMode = RefreshIndicatorTriggerMode.onEdge,
     this.elevation = 2.0,
-  }) : _indicatorType = _IndicatorType.noSpinner,
+  })  : _indicatorType = _IndicatorType.noSpinner,
         displacement = 0.0,
         edgeOffset = 0.0,
         color = null,
@@ -172,12 +172,12 @@ class ExpressiveRefreshIndicator extends StatefulWidget {
   final BoxConstraints? indicatorConstraints;
 
   @override
-  ExpressiveRefreshIndicatorState createState() => ExpressiveRefreshIndicatorState();
+  ExpressiveRefreshIndicatorState createState() =>
+      ExpressiveRefreshIndicatorState();
 }
 
 class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
     with TickerProviderStateMixin<ExpressiveRefreshIndicator> {
-
   late AnimationController _positionController;
   late AnimationController _scaleController;
   late Animation<double> _positionFactor;
@@ -191,12 +191,14 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
   double? _dragOffset;
   late Color _effectiveValueColor;
 
-  static final Animatable<double> _threeQuarterTween = Tween<double>(begin: 0.0, end: 0.75);
+  static final Animatable<double> _threeQuarterTween =
+      Tween<double>(begin: 0.0, end: 0.75);
   static final Animatable<double> _kDragSizeFactorLimitTween = Tween<double>(
     begin: 0.0,
     end: _kDragSizeFactorLimit,
   );
-  static final Animatable<double> _oneToZeroTween = Tween<double>(begin: 1.0, end: 0.0);
+  static final Animatable<double> _oneToZeroTween =
+      Tween<double>(begin: 1.0, end: 0.0);
 
   @override
   void initState() {
@@ -230,7 +232,8 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
   }
 
   void _setupColorTween() {
-    _effectiveValueColor = widget.color ?? Theme.of(context).colorScheme.primary;
+    _effectiveValueColor =
+        widget.color ?? Theme.of(context).colorScheme.primary;
     final Color color = _effectiveValueColor;
     if (color.alpha == 0x00) {
       _valueColor = AlwaysStoppedAnimation<Color>(color);
@@ -239,18 +242,20 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
         ColorTween(
           begin: color.withAlpha(0),
           end: color.withAlpha(color.alpha),
-        ).chain(CurveTween(curve: const Interval(0.0, 1.0 / _kDragSizeFactorLimit))),
+        ).chain(CurveTween(
+            curve: const Interval(0.0, 1.0 / _kDragSizeFactorLimit))),
       );
     }
   }
 
   bool _shouldStart(ScrollNotification notification) {
-    return ((notification is ScrollStartNotification && notification.dragDetails != null) ||
-        (notification is ScrollUpdateNotification &&
-            notification.dragDetails != null &&
-            widget.triggerMode == RefreshIndicatorTriggerMode.anywhere)) &&
+    return ((notification is ScrollStartNotification &&
+                notification.dragDetails != null) ||
+            (notification is ScrollUpdateNotification &&
+                notification.dragDetails != null &&
+                widget.triggerMode == RefreshIndicatorTriggerMode.anywhere)) &&
         ((notification.metrics.axisDirection == AxisDirection.up &&
-            notification.metrics.extentAfter == 0.0) ||
+                notification.metrics.extentAfter == 0.0) ||
             (notification.metrics.axisDirection == AxisDirection.down &&
                 notification.metrics.extentBefore == 0.0)) &&
         _status == null &&
@@ -268,16 +273,19 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
       });
       return false;
     }
-    final bool? indicatorAtTopNow = switch (notification.metrics.axisDirection) {
+    final bool? indicatorAtTopNow =
+        switch (notification.metrics.axisDirection) {
       AxisDirection.down || AxisDirection.up => true,
       AxisDirection.left || AxisDirection.right => null,
     };
     if (indicatorAtTopNow != _isIndicatorAtTop) {
-      if (_status == RefreshIndicatorStatus.drag || _status == RefreshIndicatorStatus.armed) {
+      if (_status == RefreshIndicatorStatus.drag ||
+          _status == RefreshIndicatorStatus.armed) {
         _dismiss(RefreshIndicatorStatus.canceled);
       }
     } else if (notification is ScrollUpdateNotification) {
-      if (_status == RefreshIndicatorStatus.drag || _status == RefreshIndicatorStatus.armed) {
+      if (_status == RefreshIndicatorStatus.drag ||
+          _status == RefreshIndicatorStatus.armed) {
         if (notification.metrics.axisDirection == AxisDirection.down) {
           _dragOffset = _dragOffset! - notification.scrollDelta!;
         } else if (notification.metrics.axisDirection == AxisDirection.up) {
@@ -285,11 +293,13 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
         }
         _checkDragOffset(notification.metrics.viewportDimension);
       }
-      if (_status == RefreshIndicatorStatus.armed && notification.dragDetails == null) {
+      if (_status == RefreshIndicatorStatus.armed &&
+          notification.dragDetails == null) {
         _show();
       }
     } else if (notification is OverscrollNotification) {
-      if (_status == RefreshIndicatorStatus.drag || _status == RefreshIndicatorStatus.armed) {
+      if (_status == RefreshIndicatorStatus.drag ||
+          _status == RefreshIndicatorStatus.armed) {
         if (notification.metrics.axisDirection == AxisDirection.down) {
           _dragOffset = _dragOffset! - notification.overscroll;
         } else if (notification.metrics.axisDirection == AxisDirection.up) {
@@ -318,7 +328,8 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
     return false;
   }
 
-  bool _handleIndicatorNotification(OverscrollIndicatorNotification notification) {
+  bool _handleIndicatorNotification(
+      OverscrollIndicatorNotification notification) {
     if (notification.depth != 0 || !notification.leading) {
       return false;
     }
@@ -349,8 +360,10 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
   }
 
   void _checkDragOffset(double containerExtent) {
-    assert(_status == RefreshIndicatorStatus.drag || _status == RefreshIndicatorStatus.armed);
-    double newValue = _dragOffset! / (containerExtent * _kDragContainerExtentPercentage);
+    assert(_status == RefreshIndicatorStatus.drag ||
+        _status == RefreshIndicatorStatus.armed);
+    double newValue =
+        _dragOffset! / (containerExtent * _kDragContainerExtentPercentage);
     if (_status == RefreshIndicatorStatus.armed) {
       newValue = math.max(newValue, 1.0 / _kDragSizeFactorLimit);
     }
@@ -364,16 +377,19 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
 
   Future<void> _dismiss(RefreshIndicatorStatus newMode) async {
     await Future<void>.value();
-    assert(newMode == RefreshIndicatorStatus.canceled || newMode == RefreshIndicatorStatus.done);
+    assert(newMode == RefreshIndicatorStatus.canceled ||
+        newMode == RefreshIndicatorStatus.done);
     setState(() {
       _status = newMode;
       widget.onStatusChange?.call(_status);
     });
     switch (_status!) {
       case RefreshIndicatorStatus.done:
-        await _scaleController.animateTo(1.0, duration: _kIndicatorScaleDuration);
+        await _scaleController.animateTo(1.0,
+            duration: _kIndicatorScaleDuration);
       case RefreshIndicatorStatus.canceled:
-        await _positionController.animateTo(0.0, duration: _kIndicatorScaleDuration);
+        await _positionController.animateTo(0.0,
+            duration: _kIndicatorScaleDuration);
       case RefreshIndicatorStatus.armed:
       case RefreshIndicatorStatus.drag:
       case RefreshIndicatorStatus.refresh:
@@ -397,7 +413,8 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
     _status = RefreshIndicatorStatus.snap;
     widget.onStatusChange?.call(_status);
     _positionController
-        .animateTo(1.0 / _kDragSizeFactorLimit, duration: _kIndicatorSnapDuration)
+        .animateTo(1.0 / _kDragSizeFactorLimit,
+            duration: _kIndicatorSnapDuration)
         .then<void>((void value) {
       if (mounted && _status == RefreshIndicatorStatus.snap) {
         setState(() {
@@ -418,7 +435,8 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
 
   /// Show the refresh indicator programmatically.
   Future<void> show({bool atTop = true}) {
-    if (_status != RefreshIndicatorStatus.refresh && _status != RefreshIndicatorStatus.snap) {
+    if (_status != RefreshIndicatorStatus.refresh &&
+        _status != RefreshIndicatorStatus.snap) {
       if (_status == null) {
         _start(atTop ? AxisDirection.down : AxisDirection.up);
       }
@@ -438,7 +456,8 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
     );
 
     final bool showIndeterminateIndicator =
-        _status == RefreshIndicatorStatus.refresh || _status == RefreshIndicatorStatus.done;
+        _status == RefreshIndicatorStatus.refresh ||
+            _status == RefreshIndicatorStatus.done;
 
     return Stack(
       children: <Widget>[
@@ -457,7 +476,9 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
                     ? EdgeInsets.only(top: widget.displacement)
                     : EdgeInsets.only(bottom: widget.displacement),
                 child: Align(
-                  alignment: _isIndicatorAtTop! ? Alignment.topCenter : Alignment.bottomCenter,
+                  alignment: _isIndicatorAtTop!
+                      ? Alignment.topCenter
+                      : Alignment.bottomCenter,
                   child: ScaleTransition(
                     scale: _scaleFactor,
                     child: _buildIndicator(context, showIndeterminateIndicator),
@@ -470,7 +491,8 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
     );
   }
 
-  Widget _buildIndicator(BuildContext context, bool showIndeterminateIndicator) {
+  Widget _buildIndicator(
+      BuildContext context, bool showIndeterminateIndicator) {
     return AnimatedBuilder(
       animation: _positionController,
       builder: (BuildContext context, Widget? child) {
@@ -479,7 +501,8 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
             return _buildExpressiveIndicator(showIndeterminateIndicator);
 
           case _IndicatorType.contained:
-            return _buildContainedExpressiveIndicator(showIndeterminateIndicator);
+            return _buildContainedExpressiveIndicator(
+                showIndeterminateIndicator);
 
           case _IndicatorType.material:
             return _buildMaterialIndicator(context, showIndeterminateIndicator);
@@ -522,7 +545,8 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
       // Show the contained expressive loading indicator during refresh
       return _ContainedExpressiveLoadingIndicator(
         color: _effectiveValueColor,
-        backgroundColor: widget.backgroundColor ?? Theme.of(context).colorScheme.surfaceContainerHighest,
+        backgroundColor: widget.backgroundColor ??
+            Theme.of(context).colorScheme.primaryContainer,
         polygons: widget.polygons,
         constraints: widget.indicatorConstraints,
         semanticsLabel: widget.semanticsLabel,
@@ -532,8 +556,8 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
       // Show a contained morphing shape during drag
       return _ContainedDragExpressiveIndicator(
         color: _valueColor.value ?? _effectiveValueColor,
-        backgroundColor: (widget.backgroundColor ?? Theme.of(context).colorScheme.surfaceContainerHighest)
-            .withAlpha((_valueColor.value?.alpha ?? 0) ~/ 2),
+        backgroundColor: (widget.backgroundColor ??
+            Theme.of(context).colorScheme.primaryContainer),
         progress: _value.value,
         polygons: widget.polygons,
         constraints: widget.indicatorConstraints,
@@ -543,7 +567,8 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
     }
   }
 
-  Widget _buildMaterialIndicator(BuildContext context, bool showIndeterminateIndicator) {
+  Widget _buildMaterialIndicator(
+      BuildContext context, bool showIndeterminateIndicator) {
     return RefreshProgressIndicator(
       semanticsLabel: widget.semanticsLabel ??
           MaterialLocalizations.of(context).refreshIndicatorSemanticLabel,
@@ -556,7 +581,8 @@ class ExpressiveRefreshIndicatorState extends State<ExpressiveRefreshIndicator>
     );
   }
 
-  Widget _buildAdaptiveIndicator(BuildContext context, bool showIndeterminateIndicator) {
+  Widget _buildAdaptiveIndicator(
+      BuildContext context, bool showIndeterminateIndicator) {
     final ThemeData theme = Theme.of(context);
     switch (theme.platform) {
       case TargetPlatform.android:
@@ -590,12 +616,13 @@ class _ExpressiveLoadingIndicatorImpl extends StatefulWidget {
   final String? semanticsValue;
 
   @override
-  State<_ExpressiveLoadingIndicatorImpl> createState() => _ExpressiveLoadingIndicatorImplState();
+  State<_ExpressiveLoadingIndicatorImpl> createState() =>
+      _ExpressiveLoadingIndicatorImplState();
 }
 
-class _ExpressiveLoadingIndicatorImplState extends State<_ExpressiveLoadingIndicatorImpl>
+class _ExpressiveLoadingIndicatorImplState
+    extends State<_ExpressiveLoadingIndicatorImpl>
     with TickerProviderStateMixin {
-
   static final List<RoundedPolygon> _defaultPolygons = [
     MaterialShapes.softBurst,
     MaterialShapes.cookie9Sided,
@@ -635,7 +662,8 @@ class _ExpressiveLoadingIndicatorImplState extends State<_ExpressiveLoadingIndic
     0.0,
     1.0,
     5.0,
-    tolerance: const Tolerance(velocity: 0.1, distance: 0.1), // Higher threshold
+    tolerance:
+        const Tolerance(velocity: 0.1, distance: 0.1), // Higher threshold
   );
 
   @override
@@ -664,7 +692,8 @@ class _ExpressiveLoadingIndicatorImplState extends State<_ExpressiveLoadingIndic
     super.dispose();
   }
 
-  List<Morph> _createMorphSequence(List<RoundedPolygon> polygons, {required bool circularSequence}) {
+  List<Morph> _createMorphSequence(List<RoundedPolygon> polygons,
+      {required bool circularSequence}) {
     final morphs = <Morph>[];
     for (int i = 0; i < polygons.length; i++) {
       if (i + 1 < polygons.length) {
@@ -683,7 +712,7 @@ class _ExpressiveLoadingIndicatorImplState extends State<_ExpressiveLoadingIndic
     // Start morph cycle timer
     _morphTimer = Timer.periodic(
       const Duration(milliseconds: _morphIntervalMs),
-          (_) => _startMorphCycle(),
+      (_) => _startMorphCycle(),
     );
 
     _startMorphCycle();
@@ -694,7 +723,8 @@ class _ExpressiveLoadingIndicatorImplState extends State<_ExpressiveLoadingIndic
 
     // Move to next morph and accumulate rotation (matching Kotlin logic)
     _currentMorphIndex = (_currentMorphIndex + 1) % _morphSequence.length;
-    _morphRotationTargetAngle = (_morphRotationTargetAngle + _quarterRotation) % _fullRotation;
+    _morphRotationTargetAngle =
+        (_morphRotationTargetAngle + _quarterRotation) % _fullRotation;
 
     // Reset and start morph animation with proper completion handling
     _morphController.reset();
@@ -728,8 +758,10 @@ class _ExpressiveLoadingIndicatorImplState extends State<_ExpressiveLoadingIndic
   @override
   Widget build(BuildContext context) {
     final constraints = widget.constraints ?? _defaultConstraints;
-    final activeIndicatorScale = 38.0 / math.min(constraints.maxWidth, constraints.maxHeight); // From Kotlin
-    final shapesScaleFactor = _calculateScaleFactor(_polygons) * activeIndicatorScale;
+    final activeIndicatorScale = 38.0 /
+        math.min(constraints.maxWidth, constraints.maxHeight); // From Kotlin
+    final shapesScaleFactor =
+        _calculateScaleFactor(_polygons) * activeIndicatorScale;
 
     return Semantics.fromProperties(
       properties: SemanticsProperties(
@@ -742,15 +774,19 @@ class _ExpressiveLoadingIndicatorImplState extends State<_ExpressiveLoadingIndic
           child: AspectRatio(
             aspectRatio: 1.0,
             child: AnimatedBuilder(
-              animation: Listenable.merge([_morphController, _globalRotationController]),
+              animation: Listenable.merge(
+                  [_morphController, _globalRotationController]),
               builder: (context, child) {
                 final morphProgress = _morphController.value.clamp(0.0, 1.0);
-                final globalRotationDegrees = _globalRotationController.value * _fullRotation;
+                final globalRotationDegrees =
+                    _globalRotationController.value * _fullRotation;
 
                 // Clockwise rotation matching Kotlin (progress * 90 + target + global)
                 final totalRotationDegrees = morphProgress * 90 +
-                    _morphRotationTargetAngle + globalRotationDegrees;
-                final totalRotationRadians = totalRotationDegrees * (math.pi / 180.0);
+                    _morphRotationTargetAngle +
+                    globalRotationDegrees;
+                final totalRotationRadians =
+                    totalRotationDegrees * (math.pi / 180.0);
 
                 return Transform.rotate(
                   angle: totalRotationRadians,
@@ -820,10 +856,13 @@ class _DragExpressiveIndicator extends StatelessWidget {
     }
 
     // Calculate which morph to use based on progress (matching Kotlin logic)
-    final activeMorphIndex = (morphSequence.length * progress).floor().clamp(0, morphSequence.length - 1);
-    final adjustedProgress = progress == 1.0 && activeMorphIndex == morphSequence.length - 1
-        ? 1.0
-        : (progress * morphSequence.length) % 1.0;
+    final activeMorphIndex = (morphSequence.length * progress)
+        .floor()
+        .clamp(0, morphSequence.length - 1);
+    final adjustedProgress =
+        progress == 1.0 && activeMorphIndex == morphSequence.length - 1
+            ? 1.0
+            : (progress * morphSequence.length) % 1.0;
 
     // Counter-clockwise rotation for drag (matching Kotlin determinate logic)
     final rotation = -progress * 180 * (math.pi / 180.0);
@@ -913,7 +952,8 @@ class _MorphPainter extends CustomPainter {
 
     // Translate the path so that its center aligns with the available size center
     final Rect bounds = scaledPath.getBounds();
-    final Offset translation = Offset(size.width / 2, size.height / 2) - bounds.center;
+    final Offset translation =
+        Offset(size.width / 2, size.height / 2) - bounds.center;
     final Path finalPath = scaledPath.shift(translation);
 
     return finalPath;
@@ -939,12 +979,13 @@ class _ContainedExpressiveLoadingIndicator extends StatefulWidget {
   final String? semanticsValue;
 
   @override
-  State<_ContainedExpressiveLoadingIndicator> createState() => _ContainedExpressiveLoadingIndicatorState();
+  State<_ContainedExpressiveLoadingIndicator> createState() =>
+      _ContainedExpressiveLoadingIndicatorState();
 }
 
-class _ContainedExpressiveLoadingIndicatorState extends State<_ContainedExpressiveLoadingIndicator>
+class _ContainedExpressiveLoadingIndicatorState
+    extends State<_ContainedExpressiveLoadingIndicator>
     with TickerProviderStateMixin {
-
   static final List<RoundedPolygon> _defaultPolygons = [
     MaterialShapes.softBurst,
     MaterialShapes.cookie9Sided,
@@ -1010,7 +1051,8 @@ class _ContainedExpressiveLoadingIndicatorState extends State<_ContainedExpressi
     super.dispose();
   }
 
-  List<Morph> _createMorphSequence(List<RoundedPolygon> polygons, {required bool circularSequence}) {
+  List<Morph> _createMorphSequence(List<RoundedPolygon> polygons,
+      {required bool circularSequence}) {
     final morphs = <Morph>[];
     for (int i = 0; i < polygons.length; i++) {
       if (i + 1 < polygons.length) {
@@ -1026,7 +1068,7 @@ class _ContainedExpressiveLoadingIndicatorState extends State<_ContainedExpressi
     _globalRotationController.repeat();
     _morphTimer = Timer.periodic(
       const Duration(milliseconds: _morphIntervalMs),
-          (_) => _startMorphCycle(),
+      (_) => _startMorphCycle(),
     );
     _startMorphCycle();
   }
@@ -1035,7 +1077,8 @@ class _ContainedExpressiveLoadingIndicatorState extends State<_ContainedExpressi
     if (!mounted) return;
 
     _currentMorphIndex = (_currentMorphIndex + 1) % _morphSequence.length;
-    _morphRotationTargetAngle = (_morphRotationTargetAngle + _quarterRotation) % _fullRotation;
+    _morphRotationTargetAngle =
+        (_morphRotationTargetAngle + _quarterRotation) % _fullRotation;
 
     _morphController.reset();
     _morphController.animateWith(_morphAnimationSpec).then((_) {
@@ -1067,8 +1110,10 @@ class _ContainedExpressiveLoadingIndicatorState extends State<_ContainedExpressi
   @override
   Widget build(BuildContext context) {
     final constraints = widget.constraints ?? _defaultConstraints;
-    final activeIndicatorScale = 38.0 / math.min(constraints.maxWidth, constraints.maxHeight);
-    final shapesScaleFactor = _calculateScaleFactor(_polygons) * activeIndicatorScale;
+    final activeIndicatorScale =
+        38.0 / math.min(constraints.maxWidth, constraints.maxHeight);
+    final shapesScaleFactor =
+        _calculateScaleFactor(_polygons) * activeIndicatorScale;
 
     return Semantics.fromProperties(
       properties: SemanticsProperties(
@@ -1086,14 +1131,18 @@ class _ContainedExpressiveLoadingIndicatorState extends State<_ContainedExpressi
                 shape: BoxShape.circle,
               ),
               child: AnimatedBuilder(
-                animation: Listenable.merge([_morphController, _globalRotationController]),
+                animation: Listenable.merge(
+                    [_morphController, _globalRotationController]),
                 builder: (context, child) {
                   final morphProgress = _morphController.value.clamp(0.0, 1.0);
-                  final globalRotationDegrees = _globalRotationController.value * _fullRotation;
+                  final globalRotationDegrees =
+                      _globalRotationController.value * _fullRotation;
 
                   final totalRotationDegrees = morphProgress * 90 +
-                      _morphRotationTargetAngle + globalRotationDegrees;
-                  final totalRotationRadians = totalRotationDegrees * (math.pi / 180.0);
+                      _morphRotationTargetAngle +
+                      globalRotationDegrees;
+                  final totalRotationRadians =
+                      totalRotationDegrees * (math.pi / 180.0);
 
                   return Transform.rotate(
                     angle: totalRotationRadians,
@@ -1162,10 +1211,13 @@ class _ContainedDragExpressiveIndicator extends StatelessWidget {
       morphSequence.add(Morph(shapes[i], shapes[i + 1]));
     }
 
-    final activeMorphIndex = (morphSequence.length * progress).floor().clamp(0, morphSequence.length - 1);
-    final adjustedProgress = progress == 1.0 && activeMorphIndex == morphSequence.length - 1
-        ? 1.0
-        : (progress * morphSequence.length) % 1.0;
+    final activeMorphIndex = (morphSequence.length * progress)
+        .floor()
+        .clamp(0, morphSequence.length - 1);
+    final adjustedProgress =
+        progress == 1.0 && activeMorphIndex == morphSequence.length - 1
+            ? 1.0
+            : (progress * morphSequence.length) % 1.0;
 
     final rotation = -progress * 180 * (math.pi / 180.0);
 
