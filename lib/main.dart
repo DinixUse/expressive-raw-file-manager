@@ -5,6 +5,8 @@ import 'pages/recycle_bin_page.dart';
 import 'pages/secure_folder_page.dart';
 import 'pages/storage_analyzer_page.dart';
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:flutter/src/material/ink_ripple.dart';
+import 'package:flutter/src/material/ink_splash.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
