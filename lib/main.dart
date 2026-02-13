@@ -5,8 +5,6 @@ import 'pages/recycle_bin_page.dart';
 import 'pages/secure_folder_page.dart';
 import 'pages/storage_analyzer_page.dart';
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:flutter/src/material/ink_ripple.dart';
-import 'package:flutter/src/material/ink_splash.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -337,8 +335,132 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  // 滚动控制器，用于监听滚动偏移
+  final ScrollController _scrollController = ScrollController();
+  // 折叠进度（0=完全展开，1=完全折叠）
+  double _collapseProgress = 0.0;
+  // SliverAppBar展开高度
+  final double _expandedHeight = 120.0;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.addListener(_onScroll);
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // 滚动监听回调
+  void _onScroll() {
+    // 计算滚动偏移量（相对于SliverAppBar的展开高度）
+    double offset = _scrollController.offset;
+    // 计算折叠进度（0~1）
+    double progress = offset / (_expandedHeight - kToolbarHeight);
+    // 限制进度在0~1之间
+    _collapseProgress = progress.clamp(0.0, 1.0);
+    
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    final surfaceColor = Theme.of(context).colorScheme.surface;
+    
+    return OrientationBuilder(builder: (context, orientation) {
+      bool isLandscape = orientation == Orientation.landscape;
+      bool hasLeading = !isLandscape;
+
+      double titleLeftPaddingCollapsed = isLandscape ? 16 : 72;
+
+      // 动态计算标题left padding：
+      // 未滚动（0）→ 16，完全折叠（1）→ 72
+      double titleLeftPadding = 16 + (titleLeftPaddingCollapsed - 16) * _collapseProgress;
+      
+      return Scaffold(
+        body: CustomScrollView(
+          controller: _scrollController, // 绑定滚动控制器
+          slivers: [
+            SliverAppBar(
+              expandedHeight: _expandedHeight,
+              pinned: true,
+              floating: false,
+              backgroundColor: surfaceColor,
+              elevation: 0,
+              //leading: hasLeading ? const DrawerButton() : null,
+              titleSpacing: 0, 
+              collapsedHeight: kToolbarHeight,
+              surfaceTintColor: surfaceColor,
+              
+              flexibleSpace: FlexibleSpaceBar(
+                collapseMode: CollapseMode.none,
+                titlePadding: EdgeInsets.only(
+                  left: titleLeftPadding, // 动态padding
+                  bottom: 16,
+                ),
+                // 使用AnimatedBuilder确保平滑过渡
+                title: AnimatedBuilder(
+                  animation: _scrollController,
+                  builder: (context, child) {
+                    return const Text(
+                      "Settings",
+                      style: TextStyle(fontSize: 22),
+                    );
+                  },
+                ),
+                background: Container(
+                  color: surfaceColor,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate(
+                  [
+                    ListTile(
+                      title: const Text("Appearance"),
+                      leading: const Icon(Icons.palette),
+                      onTap: () {},
+                    ),
+                    ListTile(
+                      title: const Text("Storage"),
+                      leading: const Icon(Icons.storage),
+                      onTap: () {},
+                    ),
+                    ListTile(
+                      title: const Text("Privacy"),
+                      leading: const Icon(Icons.privacy_tip),
+                      onTap: () {},
+                    ),
+                    ListTile(
+                      title: const Text("About"),
+                      leading: const Icon(Icons.info),
+                      onTap: () {},
+                    ),
+                    // 长列表用于测试滚动效果
+                    for (int i = 0; i < 20; i++)
+                      ListTile(
+                        title: Text("Setting Item ${i + 1}"),
+                        leading: const Icon(Icons.check_box_outline_blank),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }

@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'file_editor_page.dart';
 import 'dart:io';
 
+
 class SecureFilePreviewPage extends StatefulWidget {
   final File file;
   const SecureFilePreviewPage({super.key, required this.file});

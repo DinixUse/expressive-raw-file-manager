@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
+import 'package:raw_file_manager/widgets/widgets.dart';
 import 'secure_file_preview_page.dart';
+import '../widgets/expressive_refresh.dart';
 
 class SecureFolderPage extends StatefulWidget {
   const SecureFolderPage({super.key});
@@ -29,9 +31,11 @@ class SecureFolderPageState extends State<SecureFolderPage> {
       });
       _loadSecureFolder();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Incorrect password. Please try again.")));
-      _authenticate();
+      if (input != null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Incorrect password. Please try again.")));
+        _authenticate();
+      }
     }
   }
 
@@ -50,11 +54,14 @@ class SecureFolderPageState extends State<SecureFolderPage> {
             },
           ),
           actions: [
-            TextButton(
+            ExpressiveFilledButton(
                 onPressed: () {
                   Navigator.pop(context, password);
                 },
-                child: const Text("OK")),
+                child: const Text("Confirm")),
+            ExpressiveOutlinedButton(
+                child: const Text("Cancel"),
+                onPressed: () => Navigator.of(context).pop())
           ],
         );
       },
@@ -82,7 +89,13 @@ class SecureFolderPageState extends State<SecureFolderPage> {
           title: const Text("Secure Folder"),
           leading: const SizedBox(),
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(
+          child: ExpressiveLoadingIndicator(
+            contained: false,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          ),
+        ),
       );
     }
     return OrientationBuilder(builder: (context, orientation) {
@@ -94,7 +107,7 @@ class SecureFolderPageState extends State<SecureFolderPage> {
           title: const Text("Secure Folder"),
           leading: isLandscape ? null : const SizedBox(),
         ),
-        body: RefreshIndicator(
+        body: ExpressiveRefreshIndicator.contained(
           onRefresh: _loadSecureFolder,
           child: ListView.builder(
             itemCount: secureFiles.length,

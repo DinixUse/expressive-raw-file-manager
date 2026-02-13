@@ -32,7 +32,7 @@ class HomePage extends StatefulWidget {
   HomePageState createState() => HomePageState();
 }
 
-class HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   String currentPath = "/storage/emulated/0";
   List<FileSystemEntity> files = [];
   bool isGridView = false;
@@ -1296,183 +1296,212 @@ class HomePageState extends State<HomePage> {
                       ),
           ),
           floatingActionButton: ExpressiveFloatingActionButton(
-                  defaultIcon: Icons.add,
-                  backgroundColor:
-                      Theme.of(context).colorScheme.primaryContainer,
-                  foregroundColor:
-                      Theme.of(context).colorScheme.onPrimaryContainer,
-                  actionItems: [
-                    ActionItem(
-                      icon: Icons.file_open,
-                      label: 'File',
-                      onTap: () {
-                        _createNewFile();
-                      },
-                    ),
-                    ActionItem(
-                      icon: Icons.folder,
-                      label: 'Folder',
-                      onTap: () {
-                        _createNewFolder();
-                      },
-                    ),
-                  ],
-                ),
+            defaultIcon: Icons.add,
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+            actionItems: [
+              ActionItem(
+                icon: Icons.file_open,
+                label: 'File',
+                onTap: () {
+                  _createNewFile();
+                },
+              ),
+              ActionItem(
+                icon: Icons.folder,
+                label: 'Folder',
+                onTap: () {
+                  _createNewFolder();
+                },
+              ),
+            ],
+          ),
           persistentFooterButtons: _isCopying
               ? [
-                  Container(
-                    height: 72,
-                    color: Colors.transparent,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 0, vertical: 0),
-                      child: Center(
+                  AnimatedSize(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.fastOutSlowIn,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 1),
+                          end: Offset.zero,
+                        ).animate(CurvedAnimation(
+                          parent: AnimationController(
+                            vsync: this,
+                            duration: const Duration(milliseconds: 300),
+                          )..forward(),
+                          curve: Curves.easeInOut,
+                        )),
                         child: Container(
-                            width: MediaQuery.of(context).size.width - 48 <= 480
-                                ? MediaQuery.of(context).size.width - 48
-                                : 480,
-                            height: 72,
-                            decoration: BoxDecoration(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(128)),
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .primaryContainer,
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(10),
-                              child: Row(
-                                children: [
-                                  SizedBox(
-                                    width: 54,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(48),
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .surfaceContainerLowest,
-                                      ),
-                                      child: Center(
-                                          child: Text(
-                                        "${_selectedActionFiles.length}",
-                                        style: const TextStyle(fontSize: 16),
-                                      )),
+                          height: 72,
+                          color: Colors.transparent,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 0, vertical: 0),
+                            child: Center(
+                              child: Container(
+                                width: MediaQuery.of(context).size.width - 48 <=
+                                        480
+                                    ? MediaQuery.of(context).size.width - 48
+                                    : 480,
+                                height: 72,
+                                decoration: BoxDecoration(
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 10.0,
+                                      spreadRadius: 0.0,
+                                      offset: const Offset(0, 4),
                                     ),
-                                  ),
-                                  const SizedBox(
-                                    width: 10,
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Material(
-                                        // 新增 Material 组件作为 InkWell 的父级
-                                        borderRadius: BorderRadius.circular(
-                                            48), // 与 InkWell/Container 保持一致
-                                        color:
-                                            Colors.transparent, // 透明背景，不影响整体样式
-                                        child: InkWell(
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.06),
+                                      blurRadius: 16.0,
+                                      spreadRadius: -1.0,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(128)),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer,
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: Row(
+                                    children: [
+                                      SizedBox(
+                                        width: 54,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(48),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .surfaceContainerLowest,
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              "${_selectedActionFiles.length}",
+                                              style:
+                                                  const TextStyle(fontSize: 16),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        flex: 1,
+                                        child: Material(
                                           borderRadius:
                                               BorderRadius.circular(48),
-                                          onTap: () {
-                                            setState(() {
-                                              _isCopying = false;
-                                              _isMoving = false;
-                                              _selectedActionFiles.clear();
-                                            });
-                                          },
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(48),
-                                            ),
-                                            child: Ink(
+                                          color: Colors.transparent,
+                                          child: InkWell(
+                                            borderRadius:
+                                                BorderRadius.circular(48),
+                                            onTap: () {
+                                              setState(() {
+                                                _isCopying = false;
+                                                _isMoving = false;
+                                                _selectedActionFiles.clear();
+                                              });
+                                            },
+                                            child: Container(
                                               decoration: BoxDecoration(
                                                 borderRadius:
                                                     BorderRadius.circular(48),
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .surfaceContainerLowest,
                                               ),
-                                              child: const Center(
+                                              child: Ink(
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(48),
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .surfaceContainerLowest,
+                                                ),
+                                                child: const Center(
                                                   child: Text(
-                                                "Cancel",
-                                                style: TextStyle(fontSize: 16),
-                                              )),
+                                                    "Cancel",
+                                                    style:
+                                                        TextStyle(fontSize: 16),
+                                                  ),
+                                                ),
+                                              ),
                                             ),
                                           ),
-                                        )),
-                                  ),
-                                  const SizedBox(
-                                    width: 10,
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Material(
-                                        // 新增 Material 组件作为 InkWell 的父级
-                                        borderRadius: BorderRadius.circular(
-                                            48), // 与 InkWell/Container 保持一致
-                                        color:
-                                            Colors.transparent, // 透明背景，不影响整体样式
-                                        child: InkWell(
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        flex: 1,
+                                        child: Material(
                                           borderRadius:
                                               BorderRadius.circular(48),
-                                          onTap: () async {
-                                            try {
-                                              List<String> selectedPaths =
-                                                  _selectedActionFiles
-                                                      .map((entity) =>
-                                                          entity.path)
-                                                      .toList();
+                                          color: Colors.transparent,
+                                          child: InkWell(
+                                            borderRadius:
+                                                BorderRadius.circular(48),
+                                            onTap: () async {
+                                              try {
+                                                List<String> selectedPaths =
+                                                    _selectedActionFiles
+                                                        .map((entity) =>
+                                                            entity.path)
+                                                        .toList();
 
-                                              await bulkActionFiles(
-                                                selectedPaths,
-                                                _isMoving,
-                                                currentPath,
-                                                onCompleted: (bool isSuccess,
-                                                    int fileCount) {
-                                                  // 回调逻辑
-                                                  if (mounted) {
-                                                    _listFiles();
-                                                  }
-                                                },
-                                              );
-                                            } catch (e) {
-                                              print(e);
-                                            }
-                                            setState(() {
-                                              _isCopying = false;
-                                              _isMoving = false;
-                                              _selectedActionFiles.clear();
-                                            });
-                                          },
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(48),
-                                            ),
-                                            child: Ink(
+                                                await bulkActionFiles(
+                                                  selectedPaths,
+                                                  _isMoving,
+                                                  currentPath,
+                                                  onCompleted: (bool isSuccess,
+                                                      int fileCount) {
+                                                    if (mounted) {
+                                                      _listFiles();
+                                                    }
+                                                  },
+                                                );
+                                              } catch (e) {
+                                                print(e);
+                                              }
+                                              setState(() {
+                                                _isCopying = false;
+                                                _isMoving = false;
+                                                _selectedActionFiles.clear();
+                                              });
+                                            },
+                                            child: Container(
                                               decoration: BoxDecoration(
                                                 borderRadius:
                                                     BorderRadius.circular(48),
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .surfaceContainerLowest,
                                               ),
-                                              child: const Center(
+                                              child: Ink(
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(48),
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .surfaceContainerLowest,
+                                                ),
+                                                child: const Center(
                                                   child: Text(
-                                                "Paste",
-                                                style: TextStyle(fontSize: 16),
-                                              )),
+                                                    "Paste",
+                                                    style:
+                                                        TextStyle(fontSize: 16),
+                                                  ),
+                                                ),
+                                              ),
                                             ),
                                           ),
-                                        )),
-                                  )
-                                ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            )),
-                      ),
-                    ),
-                  ),
+                            ),
+                          ),
+                        ),
+                      )),
                 ]
               : null,
         ),

@@ -158,7 +158,7 @@ class StorageAnalyzerPageState extends State<StorageAnalyzerPage> {
           leading: isLandscape ? null : const SizedBox(),
         ),
         body: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(32.0),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
