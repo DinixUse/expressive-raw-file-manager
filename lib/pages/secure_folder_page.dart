@@ -46,22 +46,36 @@ class SecureFolderPageState extends State<SecureFolderPage> {
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Enter Secure Folder Password"),
+          title: const Text("Enter Password"),
           content: TextField(
+            decoration: const InputDecoration(border: OutlineInputBorder(), hint: Text("Type your password here...")),
             obscureText: true,
             onChanged: (value) {
               password = value;
             },
           ),
           actions: [
-            ExpressiveFilledButton(
-                onPressed: () {
-                  Navigator.pop(context, password);
-                },
-                child: const Text("Confirm")),
-            ExpressiveOutlinedButton(
-                child: const Text("Cancel"),
-                onPressed: () => Navigator.of(context).pop())
+            Row(
+              children: [
+                
+                
+                Expanded(
+                  flex: 1,
+                  child: ExpressiveOutlinedButton(
+                      child: const Text("Cancel"),
+                      onPressed: () => Navigator.of(context).pop()),
+                ),
+                const SizedBox(width: 8,),
+                Expanded(
+                  flex: 1,
+                  child: ExpressiveFilledButton(
+                      onPressed: () {
+                        Navigator.pop(context, password);
+                      },
+                      child: const Text("Confirm")),
+                ),
+              ],
+            )
           ],
         );
       },
@@ -92,7 +106,7 @@ class SecureFolderPageState extends State<SecureFolderPage> {
         body: Center(
           child: ExpressiveLoadingIndicator(
             contained: false,
-            color: Theme.of(context).colorScheme.onPrimaryContainer,
+            color: Theme.of(context).colorScheme.primary,
             backgroundColor: Theme.of(context).colorScheme.primaryContainer,
           ),
         ),

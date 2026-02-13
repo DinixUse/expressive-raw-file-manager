@@ -31,6 +31,7 @@ class _ExpressiveFilledButtonState extends State<ExpressiveFilledButton>
     with SingleTickerProviderStateMixin {
   bool _isPressed = false;
   bool _isAnimating = false; // 防止重复点击的锁
+  bool _isHolding = false; // 标记是否正在按住
   late AnimationController _controller;
   late Animation<double> _borderRadiusAnimation;
   late Animation<double> _widthAnimation;
@@ -70,27 +71,47 @@ class _ExpressiveFilledButtonState extends State<ExpressiveFilledButton>
     }
   }
 
-  // 执行完整的动画序列
-  Future<void> _playCompleteAnimation() async {
-    if (_isAnimating) return; // 如果正在动画，直接返回
+  // 开始按住动画
+  Future<void> _startHoldAnimation() async {
+    if (_isAnimating) return;
+    _isHolding = true;
     _isAnimating = true;
     
     try {
-      // 执行点击回调
-      widget.onPressed();
-      
-      // 正向播放动画（变大、变方）
       setState(() => _isPressed = true);
+      // 正向播放动画到4px
       await _controller.forward().orCancel;
-      
-      // 反向播放动画（恢复原状）
-      await _controller.reverse().orCancel;
-      if(mounted) setState(() => _isPressed = false);
+      // 如果还在按住状态（没有松手），保持在4px状态
+      if (_isHolding && mounted) {
+        setState(() => _isPressed = true);
+      }
     } catch (_) {
-      // 处理动画被中断的情况
-      if(mounted) setState(() => _isPressed = false);
+      if (mounted) setState(() => _isPressed = false);
+    }
+  }
+
+  // 结束按住动画（松手）
+  Future<void> _endHoldAnimation({bool isClick = false}) async {
+    _isHolding = false;
+    
+    try {
+      // 如果动画还没完成（没到4px），先补完到4px
+      if (_controller.value < 1.0) {
+        await _controller.forward().orCancel;
+      }
+      
+      // 执行点击回调（只有真正点击时才执行）
+      if (isClick) {
+        widget.onPressed();
+      }
+      
+      // 反向播放动画复原
+      await _controller.reverse().orCancel;
+      if (mounted) setState(() => _isPressed = false);
+    } catch (_) {
+      if (mounted) setState(() => _isPressed = false);
     } finally {
-      _isAnimating = false; // 释放锁
+      _isAnimating = false;
     }
   }
 
@@ -102,6 +123,9 @@ class _ExpressiveFilledButtonState extends State<ExpressiveFilledButton>
 
   @override
   Widget build(BuildContext context) {
+    final buttonColor = widget.backgroundColor ?? Theme.of(context).colorScheme.primary;
+    final splashColor = buttonColor.withOpacity(0.3);
+    
     Widget coloredChild;
     if (widget.child is Icon) {
       coloredChild = Icon(
@@ -126,25 +150,32 @@ class _ExpressiveFilledButtonState extends State<ExpressiveFilledButton>
       coloredChild = widget.child;
     }
     
-    return GestureDetector(
-      // 修改为onTap触发完整动画
-      onTap: _playCompleteAnimation,
-      // 保留视觉反馈（可选）
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapCancel: () => setState(() => _isPressed = false),
+    return Material(
+      color: Colors.transparent,
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
-          return Container(
+          return InkWell(
             key: _containerKey,
-            width: _childWidth > 0 ? _childWidth * _widthAnimation.value : null,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(_borderRadiusAnimation.value),
-              color: widget.backgroundColor ??
-                  Theme.of(context).colorScheme.primary,
+            // 动态匹配按钮当前的圆角
+            borderRadius: BorderRadius.circular(_borderRadiusAnimation.value),
+            // 涟漪效果配置
+            splashColor: splashColor,
+            highlightColor: Colors.transparent,
+            // 手势处理
+            onTapDown: (_) => _startHoldAnimation(),
+            onTapUp: (_) => _endHoldAnimation(isClick: true),
+            onTapCancel: () => _endHoldAnimation(isClick: false),
+            // 使用Ink作为背景容器，让涟漪显示在背景之上
+            child: Ink(
+              width: _childWidth > 0 ? _childWidth * _widthAnimation.value : null,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(_borderRadiusAnimation.value),
+                color: buttonColor,
+              ),
+              padding: const EdgeInsets.all(12.0),
+              child: Center(child: coloredChild),
             ),
-            padding: const EdgeInsets.all(12.0),
-            child: Center(child: coloredChild),
           );
         },
       ),
@@ -171,6 +202,7 @@ class _ExpressiveOutlinedButtonState extends State<ExpressiveOutlinedButton>
     with SingleTickerProviderStateMixin {
   bool _isPressed = false;
   bool _isAnimating = false; // 防止重复点击的锁
+  bool _isHolding = false; // 标记是否正在按住
   late AnimationController _controller;
   late Animation<double> _borderRadiusAnimation;
   late Animation<double> _widthAnimation;
@@ -210,24 +242,45 @@ class _ExpressiveOutlinedButtonState extends State<ExpressiveOutlinedButton>
     }
   }
 
-  // 执行完整的动画序列
-  Future<void> _playCompleteAnimation() async {
+  // 开始按住动画
+  Future<void> _startHoldAnimation() async {
     if (_isAnimating) return;
+    _isHolding = true;
     _isAnimating = true;
     
     try {
-      // 执行点击回调
-      widget.onPressed();
-      
-      // 正向播放动画
       setState(() => _isPressed = true);
+      // 正向播放动画到4px
       await _controller.forward().orCancel;
-      
-      // 反向播放动画
-      await _controller.reverse().orCancel;
-      if(mounted) setState(() => _isPressed = false);
+      // 如果还在按住状态，保持在4px状态
+      if (_isHolding && mounted) {
+        setState(() => _isPressed = true);
+      }
     } catch (_) {
-      if(mounted) setState(() => _isPressed = false);
+      if (mounted) setState(() => _isPressed = false);
+    }
+  }
+
+  // 结束按住动画（松手）
+  Future<void> _endHoldAnimation({bool isClick = false}) async {
+    _isHolding = false;
+    
+    try {
+      // 如果动画还没完成，先补完到4px
+      if (_controller.value < 1.0) {
+        await _controller.forward().orCancel;
+      }
+      
+      // 执行点击回调（只有真正点击时才执行）
+      if (isClick) {
+        widget.onPressed();
+      }
+      
+      // 反向播放动画复原
+      await _controller.reverse().orCancel;
+      if (mounted) setState(() => _isPressed = false);
+    } catch (_) {
+      if (mounted) setState(() => _isPressed = false);
     } finally {
       _isAnimating = false;
     }
@@ -241,11 +294,14 @@ class _ExpressiveOutlinedButtonState extends State<ExpressiveOutlinedButton>
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final splashColor = primaryColor.withOpacity(0.1);
+    
     Widget coloredChild;
     if (widget.child is Icon) {
       coloredChild = Icon(
         (widget.child as Icon).icon,
-        color: Theme.of(context).colorScheme.primary,
+        color: primaryColor,
       );
     } else if (widget.child is Text) {
       coloredChild = Padding(
@@ -253,41 +309,52 @@ class _ExpressiveOutlinedButtonState extends State<ExpressiveOutlinedButton>
         child: Text(
           (widget.child as Text).data!,
           style: (widget.child as Text).style?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
+                    color: primaryColor,
                   ) ??
-              TextStyle(color: Theme.of(context).colorScheme.primary),
+              TextStyle(color: primaryColor),
         ),
       );
     } else {
       coloredChild = widget.child;
     }
     
-    return GestureDetector(
-      // 修改为onTap触发完整动画
-      onTap: _playCompleteAnimation,
-      // 保留视觉反馈（可选）
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapCancel: () => setState(() => _isPressed = false),
+    return Material(
+      color: Colors.transparent,
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
-          return Container(
+          return InkWell(
             key: _containerKey,
-            width: _childWidth > 0 ? _childWidth * _widthAnimation.value : null,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(_borderRadiusAnimation.value),
-              border: Border.all(
-                  color: Theme.of(context).colorScheme.primary, width: 1),
+            // 动态匹配按钮当前的圆角
+            borderRadius: BorderRadius.circular(_borderRadiusAnimation.value),
+            // 涟漪效果配置
+            splashColor: splashColor,
+            highlightColor: Colors.transparent,
+            // 手势处理
+            onTapDown: (_) => _startHoldAnimation(),
+            onTapUp: (_) => _endHoldAnimation(isClick: true),
+            onTapCancel: () => _endHoldAnimation(isClick: false),
+            // 轮廓按钮使用Container + 透明Ink
+            child: Container(
+              width: _childWidth > 0 ? _childWidth * _widthAnimation.value : null,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(_borderRadiusAnimation.value),
+                border: Border.all(
+                    color: primaryColor, width: 1),
+              ),
+              padding: const EdgeInsets.only(top: 11, bottom: 11, left: 12, right: 12),
+              child: Ink(
+                color: Colors.transparent,
+                child: Center(child: coloredChild),
+              ),
             ),
-            padding:
-                const EdgeInsets.only(top: 11, bottom: 11, left: 12, right: 12),
-            child: Center(child: coloredChild),
           );
         },
       ),
     );
   }
 }
+
 
 
 class ExpressiveFloatingActionButton extends StatefulWidget {
@@ -550,7 +617,7 @@ class _ExpressiveLoadingIndicatorState extends State<ExpressiveLoadingIndicator>
     MaterialShapes.cookie12Sided
   ];
 
-  static final BoxConstraints _defaultConstraints = BoxConstraints(
+  static final  BoxConstraints _defaultConstraints = BoxConstraints(
     minWidth: 48.0,
     minHeight: 48.0,
     maxWidth: 48.0,

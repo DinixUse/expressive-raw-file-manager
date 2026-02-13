@@ -923,33 +923,51 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return widgets;
   }
 
+  bool _canSystemPop = false;
+
   @override
   Widget build(BuildContext context) {
     return OrientationBuilder(builder: (context, orientation) {
       // 判断是否为横屏
       bool isLandscape = orientation == Orientation.landscape;
 
-      return WillPopScope(
-        onWillPop: () async {
-          // If not at the starting path, navigate to the parent directory.
+      return PopScope(
+        // 核心：通过 canPop 控制是否允许系统执行默认返回
+        // 非根目录时：设为 false，阻止系统返回，优先执行业务逻辑
+        // 根目录时：设为 true，允许系统返回（但双击才真退出）
+        canPop: _canSystemPop,
+        onPopInvoked: (didPop) async {
+          if (didPop) return; // 系统已处理，直接返回
+
+          // 1. 非根目录：优先返回上一级目录，阻止系统退回桌面
           if (currentPath != "/storage/emulated/0") {
             setState(() {
               currentPath = Directory(currentPath).parent.path;
             });
-            _listFiles();
-            return false;
+            await _listFiles();
+            return;
           }
-          // If at the starting path, require a double-tap back to exit.
+
+          // 2. 根目录：处理双击退出逻辑
           DateTime now = DateTime.now();
           if (_lastBackPressed == null ||
               now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
             _lastBackPressed = now;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Press back again to exit the app")),
+              const SnackBar(
+                content: Text("Press back again to exit the app"),
+                duration: Duration(seconds: 2),
+              ),
             );
-            return false;
+            // 第一次点击：仍阻止系统返回
+            setState(() => _canSystemPop = false);
+            return;
           }
-          return true;
+
+          // 3. 双击确认退出：允许系统返回
+          setState(() => _canSystemPop = true);
+          // 主动触发系统返回（退出App）
+          Navigator.of(context).pop();
         },
         child: Scaffold(
           appBar: AppBar(

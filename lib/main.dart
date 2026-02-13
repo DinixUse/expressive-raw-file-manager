@@ -5,6 +5,7 @@ import 'pages/recycle_bin_page.dart';
 import 'pages/secure_folder_page.dart';
 import 'pages/storage_analyzer_page.dart';
 import 'package:dynamic_color/dynamic_color.dart';
+import 'widgets/widgets.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -327,6 +328,8 @@ class _NavigatorHomeState extends State<NavigatorHome> {
   }
 }
 
+enum AppThemeMode { day, night, followSystem }
+
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -345,7 +348,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollController.addListener(_onScroll);
     });
@@ -365,7 +368,7 @@ class _SettingsPageState extends State<SettingsPage> {
     double progress = offset / (_expandedHeight - kToolbarHeight);
     // 限制进度在0~1之间
     _collapseProgress = progress.clamp(0.0, 1.0);
-    
+
     if (mounted) {
       setState(() {});
     }
@@ -374,7 +377,9 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final surfaceColor = Theme.of(context).colorScheme.surface;
-    
+
+    AppThemeMode _selectedThemeMode = AppThemeMode.followSystem;
+
     return OrientationBuilder(builder: (context, orientation) {
       bool isLandscape = orientation == Orientation.landscape;
       bool hasLeading = !isLandscape;
@@ -383,8 +388,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
       // 动态计算标题left padding：
       // 未滚动（0）→ 16，完全折叠（1）→ 72
-      double titleLeftPadding = 16 + (titleLeftPaddingCollapsed - 16) * _collapseProgress;
-      
+      double titleLeftPadding =
+          16 + (titleLeftPaddingCollapsed - 16) * _collapseProgress;
+
       return Scaffold(
         body: CustomScrollView(
           controller: _scrollController, // 绑定滚动控制器
@@ -392,14 +398,15 @@ class _SettingsPageState extends State<SettingsPage> {
             SliverAppBar(
               expandedHeight: _expandedHeight,
               pinned: true,
-              floating: false,
+              floating: true,
+              snap: true,
               backgroundColor: surfaceColor,
               elevation: 0,
               //leading: hasLeading ? const DrawerButton() : null,
-              titleSpacing: 0, 
+              titleSpacing: 0,
               collapsedHeight: kToolbarHeight,
               surfaceTintColor: surfaceColor,
-              
+
               flexibleSpace: FlexibleSpaceBar(
                 collapseMode: CollapseMode.none,
                 titlePadding: EdgeInsets.only(
@@ -426,38 +433,241 @@ class _SettingsPageState extends State<SettingsPage> {
             SliverPadding(
               padding: const EdgeInsets.all(16),
               sliver: SliverList(
-                delegate: SliverChildListDelegate(
-                  [
-                    ListTile(
-                      title: const Text("Appearance"),
-                      leading: const Icon(Icons.palette),
-                      onTap: () {},
-                    ),
-                    ListTile(
-                      title: const Text("Storage"),
-                      leading: const Icon(Icons.storage),
-                      onTap: () {},
-                    ),
-                    ListTile(
-                      title: const Text("Privacy"),
-                      leading: const Icon(Icons.privacy_tip),
-                      onTap: () {},
-                    ),
-                    ListTile(
-                      title: const Text("About"),
-                      leading: const Icon(Icons.info),
-                      onTap: () {},
-                    ),
-                    // 长列表用于测试滚动效果
-                    for (int i = 0; i < 20; i++)
-                      ListTile(
-                        title: Text("Setting Item ${i + 1}"),
-                        leading: const Icon(Icons.check_box_outline_blank),
+                delegate: SliverChildListDelegate([
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Card(
+                            shadowColor: Colors.transparent,
+                            color:
+                                Theme.of(context).colorScheme.tertiaryContainer,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: const Padding(
+                              padding: EdgeInsets.only(
+                                top: 12,
+                                bottom: 12,
+                                right: 18,
+                                left: 18,
+                              ),
+                              child: Text(
+                                "Interface",
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                  ],
-                ),
+                      const SizedBox(height: 4),
+                      Card(
+                        margin: const EdgeInsets.all(1),
+                        shadowColor: Colors.transparent,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerLowest,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(24),
+                            topRight: Radius.circular(24),
+                            bottomLeft: Radius.circular(4),
+                            bottomRight: Radius.circular(4),
+                          ),
+                        ),
+                        child: ListTile(
+                          leading: const Icon(Icons.brush),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(24),
+                              topRight: Radius.circular(24),
+                              bottomLeft: Radius.circular(4),
+                              bottomRight: Radius.circular(4),
+                            ),
+                          ),
+                          title: const Text("Theme"),
+                          subtitle: const Text(
+                              "Edit the theme mode of this application."),
+                          onTap: () {
+                            showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return StatefulBuilder(
+                                      builder: (context, setState) {
+                                    return AlertDialog(
+                                      title: const Text("Theme"),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          RadioListTile<AppThemeMode>(
+                                            shape: const RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.only(
+                                                    topLeft:
+                                                        Radius.circular(24),
+                                                    topRight:
+                                                        Radius.circular(24),
+                                                    bottomLeft:
+                                                        Radius.circular(4),
+                                                    bottomRight:
+                                                        Radius.circular(4))),
+                                            tileColor: Theme.of(context)
+                                                .colorScheme
+                                                .surfaceContainerLow,
+                                            title: const Text("Follow system"),
+                                            value: AppThemeMode.followSystem,
+                                            groupValue: _selectedThemeMode,
+                                            onChanged: (value) {
+                                              setState(() =>
+                                                  _selectedThemeMode = value!);
+                                            },
+                                          ),
+                                          const SizedBox(
+                                            height: 2,
+                                          ),
+                                          RadioListTile<AppThemeMode>(
+                                            shape: const RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.only(
+                                                    topLeft: Radius.circular(4),
+                                                    topRight:
+                                                        Radius.circular(4),
+                                                    bottomLeft:
+                                                        Radius.circular(4),
+                                                    bottomRight:
+                                                        Radius.circular(4))),
+                                            tileColor: Theme.of(context)
+                                                .colorScheme
+                                                .surfaceContainerLow,
+                                            title: const Text("Day"),
+                                            value: AppThemeMode.day,
+                                            groupValue: _selectedThemeMode,
+                                            onChanged: (value) {
+                                              setState(() =>
+                                                  _selectedThemeMode = value!);
+                                            },
+                                          ),
+                                          const SizedBox(
+                                            height: 2,
+                                          ),
+                                          RadioListTile<AppThemeMode>(
+                                            shape: const RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.only(
+                                                    topLeft: Radius.circular(4),
+                                                    topRight:
+                                                        Radius.circular(4),
+                                                    bottomLeft:
+                                                        Radius.circular(24),
+                                                    bottomRight:
+                                                        Radius.circular(24))),
+                                            tileColor: Theme.of(context)
+                                                .colorScheme
+                                                .surfaceContainerLow,
+                                            title: const Text("Night"),
+                                            value: AppThemeMode.night,
+                                            groupValue: _selectedThemeMode,
+                                            onChanged: (value) {
+                                              setState(() =>
+                                                  _selectedThemeMode = value!);
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                      actions: [
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              flex: 1,
+                                              child: ExpressiveOutlinedButton(
+                                                  child: const Text("Cancel"),
+                                                  onPressed: () =>
+                                                      Navigator.of(context)
+                                                          .pop()),
+                                            ),
+                                            const SizedBox(
+                                              width: 8,
+                                            ),
+                                            Expanded(
+                                              flex: 1,
+                                              child: ExpressiveFilledButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(context,
+                                                        _selectedThemeMode);
+                                                  },
+                                                  child: const Text("Confirm")),
+                                            ),
+                                          ],
+                                        )
+                                      ],
+                                    );
+                                  });
+                                });
+                          },
+                        ),
+                      ),
+                      Card(
+                        margin: const EdgeInsets.all(1),
+                        shadowColor: Colors.transparent,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerLowest,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(4),
+                            topRight: Radius.circular(4),
+                            bottomLeft: Radius.circular(24),
+                            bottomRight: Radius.circular(24),
+                          ),
+                        ),
+                        child: ListTile(
+                          leading: const Icon(Icons.color_lens),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(4),
+                              topRight: Radius.circular(4),
+                              bottomLeft: Radius.circular(24),
+                              bottomRight: Radius.circular(24),
+                            ),
+                          ),
+                          title: const Text("Theme color"),
+                          subtitle: const Text(
+                              "Edit the accent color of this application."),
+                          onTap: () {},
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Card(
+                            shadowColor: Colors.transparent,
+                            color:
+                                Theme.of(context).colorScheme.tertiaryContainer,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: const Padding(
+                              padding: EdgeInsets.only(
+                                top: 12,
+                                bottom: 12,
+                                right: 18,
+                                left: 18,
+                              ),
+                              child: Text(
+                                "Behavior",
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                  ),
+                ]),
               ),
-            ),
+            )
           ],
         ),
       );
