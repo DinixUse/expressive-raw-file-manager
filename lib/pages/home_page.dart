@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as path;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -33,6 +34,9 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> with TickerProviderStateMixin {
+  static const MethodChannel _channel =
+      MethodChannel('com.jara.manager.raw_file_manager/apk_install');
+
   String currentPath = "/storage/emulated/0";
   List<FileSystemEntity> files = [];
   bool isGridView = false;
@@ -50,6 +54,36 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   bool _isCopying = false;
   bool _isMoving = false;
   late FileSystemEntity _globalTempEntity;
+
+  // Flutter仅负责调用原生方法，传递APK路径
+  Future<void> installApk(String apkPath) async {
+    try {
+      // 第一步：先接收为dynamic，避免直接强转
+      final dynamic resultData = await _channel.invokeMethod(
+        'installApk',
+        {'apkPath': apkPath},
+      );
+
+      // 第二步：安全转换为Map<String, dynamic>
+      final Map<String, dynamic> result = Map<String, dynamic>.from(resultData);
+
+      // 仅提示结果（无需处理权限，因为已精简）
+      if (mounted) {}
+    } on PlatformException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('调用失败：${e.message}'), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('类型转换错误：$e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
 
   void _moveOrCopyItem({required bool isMove, FileSystemEntity? entity}) {
     setState(() {
@@ -271,6 +305,146 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  void _showFileOperationMenu(
+      BuildContext context,
+      dynamic entity,
+      double buttonX, // 按钮的X坐标
+      double buttonY // 按钮的Y坐标
+      ) {
+    // 构建菜单项（完全不变，极简写法）
+    List<PopupMenuEntry<String>> menuItems = [
+      const PopupMenuItem<String>(
+          value: 'copy',
+          child: Padding(
+            padding: EdgeInsets.all(4),
+            child: Row(children: [
+              Icon(Icons.copy, size: 20),
+              SizedBox(width: 12),
+              Text('Copy')
+            ]),
+          )),
+      const PopupMenuItem<String>(
+          value: 'cut',
+          child: Padding(
+            padding: EdgeInsets.all(4),
+            child: Row(children: [
+              Icon(Icons.cut, size: 20),
+              SizedBox(width: 12),
+              Text('Cut')
+            ]),
+          )),
+      const PopupMenuItem<String>(
+          value: 'rename',
+          child: Padding(
+            padding: EdgeInsets.all(4),
+            child: Row(children: [
+              Icon(Icons.edit, size: 20),
+              SizedBox(width: 12),
+              Text('Rename')
+            ]),
+          )),
+    ];
+
+    if (entity is File &&
+        ['.txt', '.md', '.json', '.xml']
+            .contains(path.extension(entity.path).toLowerCase())) {
+      menuItems.add(const PopupMenuItem<String>(
+          value: 'edit_file',
+          child: Padding(
+            padding: EdgeInsets.all(4),
+            child: Row(children: [
+              Icon(Icons.edit_note, size: 20),
+              SizedBox(width: 12),
+              Text('Edit File')
+            ]),
+          )));
+    }
+
+    menuItems.addAll([
+      const PopupMenuItem<String>(
+          value: 'delete',
+          child: Padding(
+            padding: EdgeInsets.all(4),
+            child: Row(children: [
+              Icon(Icons.delete, size: 20),
+              SizedBox(width: 12),
+              Text('Delete')
+            ]),
+          )),
+      const PopupMenuItem<String>(
+          value: 'share',
+          child: Padding(
+            padding: EdgeInsets.all(4),
+            child: Row(children: [
+              Icon(Icons.share, size: 20),
+              SizedBox(width: 12),
+              Text('Share')
+            ]),
+          )),
+      const PopupMenuItem<String>(
+          value: 'zip_unzip',
+          child: Padding(
+            padding: EdgeInsets.all(4),
+            child: Row(children: [
+              Icon(Icons.archive, size: 20),
+              SizedBox(width: 12),
+              Text('Zip/Unzip')
+            ]),
+          )),
+    ]);
+
+    // 菜单贴在按钮右下角
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        buttonX + 40, // 按钮X
+        buttonY + 40, // 按钮Y
+        MediaQuery.of(context).size.width - (buttonX + 40),
+        MediaQuery.of(context).size.height - (buttonY + 40),
+      ),
+      items: menuItems,
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(24))),
+      clipBehavior: Clip.antiAlias,
+
+      
+      popUpAnimationStyle: const AnimationStyle(
+        
+        duration: Duration(milliseconds: 400),
+        
+        curve: Curves.decelerate,
+        
+        reverseCurve: Curves.decelerate,
+      ),
+    ).then((value) {
+      if (value == null) return;
+      switch (value) {
+        case 'copy':
+          _moveOrCopyItem(isMove: false, entity: entity);
+          break;
+        case 'cut':
+          _moveOrCopyItem(isMove: true, entity: entity);
+          break;
+        case 'rename':
+          _renameEntity(entity);
+          break;
+        case 'edit_file':
+          _editFileContent(entity);
+          break;
+        case 'delete':
+          _deleteEntity(entity);
+          break;
+        case 'share':
+          _shareEntity(entity);
+          break;
+        case 'zip_unzip':
+          _zipUnzipEntity(entity);
+          break;
+      }
+    });
+  }
+
   void _navigateTo(FileSystemEntity entity) {
     if (_isMultiSelect) {
       _toggleSelection(entity);
@@ -287,12 +461,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Future<void> _openFile(FileSystemEntity entity) async {
     if (entity is File) {
       String ext = path.extension(entity.path).toLowerCase();
-      if (['.jpg', '.png', '.jpeg', '.gif', '.bmp'].contains(ext)) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => PreviewPage(file: entity)),
-        );
-      } else if (['.txt', '.md', '.json', '.xml'].contains(ext)) {
+      if (['.txt', '.md', '.json', '.xml'].contains(ext)) {
         if (currentPath.contains("SecureFolder")) {
           Navigator.push(
             context,
@@ -305,6 +474,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             MaterialPageRoute(builder: (_) => TextPreviewPage(file: entity)),
           );
         }
+      } else if ([".apk"].contains(ext)) {
+        installApk(entity.path);
       } else {
         OpenFile.open(entity.path);
       }
@@ -327,12 +498,15 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return Icons.insert_drive_file;
   }
 
-  void _onLongPress(FileSystemEntity entity) {
+  void _onLongPress(FileSystemEntity entity, TapDownDetails details) {
     if (_isMultiSelect) {
       _toggleSelection(entity);
       return;
     }
-    showModalBottomSheet(
+
+    _showFileOperationMenu(
+        context, entity, details.globalPosition.dx, details.globalPosition.dy);
+    /*showModalBottomSheet(
       isScrollControlled: true,
       showDragHandle: true,
       context: context,
@@ -461,7 +635,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
         );
       },
-    );
+    );*/
   }
 
   void _toggleSelection(FileSystemEntity entity) {
@@ -1173,7 +1347,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           bool isSelected = _selectedFiles.contains(entity);
                           return GestureDetector(
                             onTap: () => _navigateTo(entity),
-                            onLongPress: () => _onLongPress(entity),
                             child: Card(
                               child: Stack(
                                 children: [
@@ -1293,11 +1466,25 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                                 : "Folder"),
                                             trailing: _isMultiSelect
                                                 ? null
-                                                : IconButton(
-                                                    onPressed: () =>
-                                                        _onLongPress(entity),
-                                                    icon: const Icon(
-                                                        Icons.more_vert)),
+                                                : GestureDetector(
+                                                    // 用onTapDown获取点击位置
+                                                    onTapDown: (TapDownDetails
+                                                        details) {
+                                                      // 传点击位置的X/Y给菜单方法
+                                                      _showFileOperationMenu(
+                                                          context,
+                                                          entity,
+                                                          details.globalPosition
+                                                              .dx, // 点击位置X
+                                                          details.globalPosition
+                                                              .dy // 点击位置Y
+                                                          );
+                                                    },
+                                                    // 保留原onTap（防止误触）
+                                                    onTap: () {},
+                                                    child: const Icon(Icons
+                                                        .more_vert), // 你的原按钮组件
+                                                  ),
                                             onTap: () {
                                               _navigateTo(entity);
                                             },

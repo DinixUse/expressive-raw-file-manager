@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 import '../services/deletion_service.dart';
 import '../widgets/widgets.dart';
+import '../widgets/expressive_refresh.dart';
 
 class RecycleBinPage extends StatefulWidget {
   const RecycleBinPage({super.key});
@@ -112,7 +113,7 @@ class RecycleBinPageState extends State<RecycleBinPage> {
         ),
         body: Padding(
           padding: const EdgeInsets.all(16),
-          child: RefreshIndicator(
+          child: ExpressiveRefreshIndicator(
             onRefresh: _loadRecycleBin,
             child: ListView.builder(
                 itemCount: binFiles.length,
